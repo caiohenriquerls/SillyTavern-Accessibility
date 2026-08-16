@@ -1,0 +1,111 @@
+/* Texto lido pelo leitor de tela mas invisivel na tela. */
+.pma11y-sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Foco visivel. O ST nao desenha contorno nesses spans, o que atrapalha
+   quem tem baixa visao e navega pelo teclado. */
+#completion_prompt_manager_list .prompt-manager-toggle-action:focus-visible,
+#completion_prompt_manager_list .prompt-manager-edit-action:focus-visible,
+#completion_prompt_manager_list .prompt-manager-detach-action:focus-visible,
+#completion_prompt_manager_list .prompt-manager-inspect-action:focus-visible {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+/* Alguns temas escondem o contorno padrao; garantimos o retorno dele. */
+#completion_prompt_manager_list [role="switch"]:focus {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+}
+
+/* Lorebook: foco visivel nos controles convertidos. */
+#world_popup_entries_list .killSwitch:focus-visible,
+#world_popup_entries_list .inline-drawer-toggle:focus-visible,
+#world_popup_entries_list .move_entry_button:focus-visible,
+#world_popup_entries_list .duplicate_entry_button:focus-visible,
+#world_popup_entries_list .delete_entry_button:focus-visible,
+#world_popup_entries_list [role="switch"]:focus,
+#world_popup_entries_list [role="button"]:focus {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+/* Moldura do painel: botao de abrir na barra de cima e barra de ferramentas. */
+#WI-SP-button .drawer-toggle:focus-visible,
+#world_popup [role="button"]:focus-visible,
+#world_popup .menu_button:focus-visible,
+#world_popup input:focus-visible,
+#world_popup select:focus-visible {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+/* Painel de personagens e grupos: botoes, campos e cards. */
+#right-nav-panel [role="button"]:focus-visible,
+#right-nav-panel .menu_button:focus-visible,
+#right-nav-panel input:focus-visible,
+#right-nav-panel select:focus-visible,
+#right-nav-panel textarea:focus-visible,
+.character_select:focus-visible,
+.group_select:focus-visible,
+.bogus_folder_select:focus-visible {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+/* Barra de navegacao superior e area de chat (envio + swipes). */
+#top-settings-holder .drawer-icon:focus-visible,
+#options_button:focus-visible,
+#send_textarea:focus-visible,
+#chat .swipe_left:focus-visible,
+#chat .swipe_right:focus-visible {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+/* Itens dos menus (opcoes / wand) com foco gerenciado. */
+#options a:focus-visible,
+#options a:focus,
+#extensionsMenu .interactable:focus-visible,
+#extensionsMenu .interactable:focus {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+/* Chats passados: blocos, acoes e fechar. */
+#select_chat_div .select_chat_block:focus-visible,
+#shadow_select_chat_popup [role="button"]:focus-visible,
+#select_chat_cross:focus-visible,
+#select_chat_search:focus-visible {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+/* Painel de personas: botoes, campos e cards. */
+#PersonaManagement [role="button"]:focus-visible,
+#PersonaManagement .menu_button:focus-visible,
+#PersonaManagement input:focus-visible,
+#PersonaManagement select:focus-visible,
+#PersonaManagement textarea:focus-visible,
+#user_avatar_block .avatar-container:focus-visible,
+#user_avatar_block .avatar_upload:focus-visible {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
