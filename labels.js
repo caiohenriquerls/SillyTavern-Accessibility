@@ -1,14 +1,14 @@
 /**
  * Settings sliders labels
  *
- * O SillyTavern usa por toda parte o par "slider + campo numerico" da classe
- * neo-range: um <small> com o texto (ex.: "Response (tokens)", "Temperature")
- * vem antes de <input class="neo-range-slider"> e de <input class="neo-range-input">.
- * Esse <small> nao esta associado a nenhum dos dois, entao o leitor de tela
- * anuncia so "slider" e "spin button", sem nome.
+ * SillyTavern uses the "slider + number field" pair from the neo-range class
+ * everywhere: a <small> with the text (e.g. "Response (tokens)", "Temperature")
+ * comes before <input class="neo-range-slider"> and <input class="neo-range-input">.
+ * That <small> is not associated with either of them, so the screen reader
+ * announces only "slider" and "spin button", with no name.
  *
- * Este modulo associa o texto visual a cada slider e ao seu campo numerico,
- * sem mudar nada na tela. Sao ~70 pares em todo o app.
+ * This module associates the visual text with each slider and its number field,
+ * without changing anything on screen. There are ~70 pairs across the app.
  */
 
 const SLIDER = '.neo-range-slider';
@@ -16,13 +16,13 @@ const CAMPO = '.neo-range-input';
 
 let observador = null;
 
-/** Texto limpo de um elemento de rotulo (ignora icones sem texto). */
+/** Clean text of a label element (ignores text-less icons). */
 function textoRotulo(el) {
     if (!el) return '';
     return (el.textContent || '').replace(/\s+/g, ' ').trim();
 }
 
-/** Ja tem um <label for=""> associado? Entao nao mexemos. */
+/** Already has an associated <label for="">? Then we leave it alone. */
 function jaTemLabel(el) {
     if (el.hasAttribute('aria-label')) return true;
     if (el.labels && el.labels.length) {
@@ -32,8 +32,8 @@ function jaTemLabel(el) {
 }
 
 /**
- * Descobre o texto do rotulo de um slider: normalmente e o <small> irmao
- * anterior; se nao houver, procuramos um <small> no mesmo bloco.
+ * Finds a slider's label text: usually the previous <small> sibling; if there
+ * is none, we look for a <small> in the same block.
  */
 function rotuloDoSlider(slider) {
     let el = slider.previousElementSibling;
@@ -44,7 +44,7 @@ function rotuloDoSlider(slider) {
         }
         el = el.previousElementSibling;
     }
-    // fallback: primeiro <small> do container imediato
+    // fallback: first <small> of the immediate container
     const pai = slider.parentElement;
     if (pai) {
         const small = pai.querySelector(':scope > small, :scope > label');
@@ -62,7 +62,7 @@ function aplicar(raiz = document) {
         if (!texto) return;
         slider.setAttribute('aria-label', texto);
         slider.dataset.a11yLabel = '1';
-        // campo numerico pareado (data-for aponta para o id do slider)
+        // paired number field (data-for points to the slider's id)
         if (slider.id) {
             const campo = document.querySelector(`${CAMPO}[data-for="${slider.id}"]`);
             if (campo && !jaTemLabel(campo)) {
@@ -75,8 +75,8 @@ function aplicar(raiz = document) {
 
 function iniciar() {
     aplicar();
-    // A maioria dos sliders e estatica, mas paineis de extensoes podem trazer
-    // mais depois; um observador leve cobre isso.
+    // Most sliders are static, but extension panels can bring more later; a
+    // light observer covers that.
     observador = new MutationObserver(() => {
         window.clearTimeout(iniciar._t);
         iniciar._t = window.setTimeout(() => aplicar(), 150);

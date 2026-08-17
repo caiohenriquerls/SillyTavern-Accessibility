@@ -1,15 +1,15 @@
 /**
  * Prompt Manager Accessibility
  *
- * O Prompt Manager do SillyTavern desenha cada toggle como um <span> vazio
- * cujo unico estado e o nome da classe CSS (fa-toggle-on / fa-toggle-off).
- * Para a arvore de acessibilidade aquilo nao e um controle: nao tem papel,
- * nao tem rotulo, nao tem estado, e nao recebe foco pelo teclado.
+ * SillyTavern's Prompt Manager draws each toggle as an empty <span> whose only
+ * state is the CSS class name (fa-toggle-on / fa-toggle-off). To the
+ * accessibility tree that is not a control: no role, no name, no state, and it
+ * cannot be focused with the keyboard.
  *
- * Esta extensao nao altera o codigo do SillyTavern. Ela observa a lista e,
- * a cada redesenho, converte os elementos em switches de verdade.
+ * This extension does not modify SillyTavern's code. It observes the list and,
+ * on every redraw, turns the elements into real switches.
  *
- * Nada aqui muda a aparencia visual.
+ * Nothing here changes the visual appearance.
  */
 
 const LIST_ID = 'completion_prompt_manager_list';
@@ -20,7 +20,7 @@ const EDIT = '.prompt-manager-edit-action';
 const DETACH = '.prompt-manager-detach-action';
 const TOKENS = '.prompt_manager_prompt_tokens';
 
-/** Linhas que sao apenas separadores visuais, nao modulos. */
+/** Rows that are only visual separators, not modules. */
 const SEPARADOR = /^\s*=|=\s*$|pick one|edit custom toggles/i;
 
 let anunciador = null;
@@ -28,25 +28,25 @@ let focoPendente = null;
 let observadorLista = null;
 
 /* ------------------------------------------------------------------ */
-/* utilidades                                                          */
+/* utilities                                                           */
 /* ------------------------------------------------------------------ */
 
 /**
- * Remove emoji e simbolos decorativos do nome.
- * Sem isso o leitor verbaliza "raio emoji Main Prompt robo emoji".
- * O texto visivel continua intacto: isto vai apenas para o aria-label.
+ * Removes emoji and decorative symbols from the name.
+ * Without this the reader says "lightning-emoji Main Prompt robot-emoji".
+ * The visible text stays intact: this only goes into the aria-label.
  */
 function limparNome(texto) {
     if (!texto) return '';
     let s = texto;
     try {
         s = s.replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}]/gu, ' ');
-        s = s.replace(/[\uFE00-\uFE0F\u200D\u20E3]/gu, '');
+        s = s.replace(/[︀-️‍⃣]/gu, '');
     } catch {
-        s = s.replace(/[\u2190-\u2BFF\u2600-\u27BF]/g, ' ');
+        s = s.replace(/[←-⯿☀-➿]/g, ' ');
         s = s.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ' ');
     }
-    s = s.replace(/[=\u2500-\u257F_]{2,}/g, ' ');
+    s = s.replace(/[=─-╿_]{2,}/g, ' ');
     s = s.replace(/^\s*[=_\s]+|[=_\s]+$/g, '');
     s = s.replace(/\s+/g, ' ').trim();
     return s || 'unnamed module';
@@ -54,7 +54,7 @@ function limparNome(texto) {
 
 function anunciar(msg) {
     if (!anunciador) return;
-    // limpar primeiro forca o leitor a reanunciar texto identico
+    // clearing first forces the reader to re-announce identical text
     anunciador.textContent = '';
     window.setTimeout(() => { anunciador.textContent = msg; }, 60);
 }
@@ -75,8 +75,8 @@ function estaLigado(toggle) {
 }
 
 /**
- * Ativacao por teclado. O ST so escuta 'click', entao Enter e Espaco
- * precisam ser traduzidos.
+ * Keyboard activation. SillyTavern only listens for 'click', so Enter and
+ * Space have to be translated into a click.
  */
 function tratarTecla(ev) {
     if (ev.key !== 'Enter' && ev.key !== ' ' && ev.key !== 'Spacebar') return;
@@ -86,14 +86,14 @@ function tratarTecla(ev) {
 }
 
 /* ------------------------------------------------------------------ */
-/* grupos mutuamente exclusivos                                        */
+/* mutually exclusive groups                                           */
 /* ------------------------------------------------------------------ */
 
 /**
- * Muitos presets (o Freaky Frankenstein entre eles) delimitam grupos
- * "escolha um" com linhas separadoras. Lemos essa convencao para avisar
- * quando dois modulos do mesmo grupo ficam ligados ao mesmo tempo.
- * Apenas avisa: nunca desliga nada sozinho.
+ * Many presets (the Freaky Frankenstein among them) delimit "pick one" groups
+ * with separator rows. We read that convention to warn when two modules of the
+ * same group are enabled at the same time. It only warns: it never turns
+ * anything off on its own.
  */
 function grupoDaLinha(lista, linha) {
     const linhas = Array.from(lista.querySelectorAll(ROW));
@@ -133,7 +133,7 @@ function conferirGrupo(lista, linha) {
 }
 
 /* ------------------------------------------------------------------ */
-/* aplicacao                                                           */
+/* application                                                         */
 /* ------------------------------------------------------------------ */
 
 function tratarClique(ev) {
@@ -142,15 +142,15 @@ function tratarClique(ev) {
     const lista = document.getElementById(LIST_ID);
     const nome = limparNome(linha?.querySelector(NAME)?.dataset.pmName || '');
 
-    // o ST inverte o estado depois; anunciamos o valor futuro
+    // SillyTavern flips the state afterwards; we announce the upcoming value
     const futuro = !estaLigado(toggle);
     anunciar(`${nome}: ${futuro ? 'enabled' : 'disabled'}.`);
 
-    // a lista inteira e redesenhada, o que destroi o elemento focado
+    // the whole list is redrawn, which destroys the focused element
     focoPendente = linha?.dataset.pmIdentifier || null;
 
     if (lista && linha) {
-        window.setTimeout(() => conferirGrupo(lista, 
+        window.setTimeout(() => conferirGrupo(lista,
             lista.querySelector(`${ROW}[data-pm-identifier="${CSS.escape(linha.dataset.pmIdentifier)}"]`) || linha), 250);
     }
 }
@@ -161,14 +161,14 @@ function enriquecerLinha(linha) {
     const nome = limparNome(bruto);
     const separador = SEPARADOR.test(bruto);
 
-    // icones decorativos e alca de arrastar nao devem ser lidos
+    // decorative icons and the drag handle should not be read
     linha.querySelectorAll('.drag-handle, .fa-fw.fa-solid, [class*="fa-"]:empty')
         .forEach(el => {
             if (el.matches(`${TOGGLE}, ${EDIT}, ${DETACH}`)) return;
             el.setAttribute('aria-hidden', 'true');
         });
 
-    // nome limpo, sem emoji
+    // clean name, without emoji
     const alvoNome = spanNome?.querySelector('a') || spanNome;
     if (alvoNome && !alvoNome.dataset.pma11y) {
         alvoNome.setAttribute('aria-label', nome);
@@ -180,7 +180,7 @@ function enriquecerLinha(linha) {
         }
     }
 
-    // contagem de tokens
+    // token count
     const tok = linha.querySelector(TOKENS);
     if (tok && !tok.dataset.pma11y) {
         const n = tok.dataset.pmTokens || tok.textContent.trim();
@@ -188,7 +188,7 @@ function enriquecerLinha(linha) {
         tok.dataset.pma11y = '1';
     }
 
-    // o toggle: de span decorativo para switch de verdade
+    // the toggle: from decorative span to a real switch
     const toggle = linha.querySelector(TOGGLE);
     if (toggle) {
         const ligado = estaLigado(toggle);
@@ -205,7 +205,7 @@ function enriquecerLinha(linha) {
         }
     }
 
-    // editar e remover tambem sao spans mudos
+    // edit and remove are also mute spans
     const edit = linha.querySelector(EDIT);
     if (edit && !edit.dataset.pma11y) {
         edit.setAttribute('role', 'button');
@@ -236,7 +236,7 @@ function aplicar() {
 
     lista.querySelectorAll(ROW).forEach(enriquecerLinha);
 
-    // devolver o foco apos o redesenho
+    // restore focus after the redraw
     if (focoPendente) {
         const alvo = lista.querySelector(
             `${ROW}[data-pm-identifier="${CSS.escape(focoPendente)}"] ${TOGGLE}`);
@@ -246,7 +246,7 @@ function aplicar() {
 }
 
 /* ------------------------------------------------------------------ */
-/* inicializacao                                                       */
+/* initialization                                                      */
 /* ------------------------------------------------------------------ */
 
 function ligarObservadorLista() {
@@ -271,7 +271,7 @@ function iniciar() {
 
     ligarObservadorLista();
 
-    // a lista so existe depois que o painel e aberto
+    // the list only exists after the panel is opened
     new MutationObserver(() => {
         if (!observadorLista) ligarObservadorLista();
         else aplicar();
@@ -284,7 +284,7 @@ if (document.readyState === 'loading') {
     iniciar();
 }
 
-// carrega tambem os demais modulos de acessibilidade
+// also loads the other accessibility modules
 import './lorebook.js';
 import './character.js';
 import './navigation.js';
@@ -296,8 +296,8 @@ import './collapsibles.js';
 import './menus.js';
 import './pins.js';
 import './namefixes.js';
-// Por ultimo: preenche com o title (como aria-label) tudo que os modulos acima
-// nao nomearam explicitamente -- assim os rotulos especificos tem prioridade.
+// Last: fills in the title (as aria-label) for everything the modules above
+// did not name explicitly -- so the specific labels take priority.
 import './titles.js';
 
 export { iniciar as init };

@@ -1,28 +1,28 @@
 /**
  * Chat area accessibility (send bar + message swipes)
  *
- * O SillyTavern (keyboard.js) ja torna os botoes de mensagem e da barra de
- * envio focaveis, e a maioria tem title, entao o leitor os anuncia. Faltam os
- * controles SEM title, que ficam como botao sem nome:
+ * SillyTavern (keyboard.js) already makes the message and send-bar buttons
+ * focusable, and most have a title, so the reader announces them. The controls
+ * WITHOUT a title are the ones left as an unnamed button:
  *
- *  - o botao de opcoes (as tres barrinhas) na barra de envio;
- *  - a caixa de digitar mensagem (so tem placeholder, sem nome estavel);
- *  - as setas de trocar resposta (swipe) em cada mensagem.
+ *  - the options button (the three bars) in the send bar;
+ *  - the message input box (only a placeholder, no stable name);
+ *  - the swipe (previous/next response) arrows on each message.
  *
- * Modulo nao invasivo: so acrescenta papel e nome onde faltam.
+ * Non-invasive module: only adds role and name where they are missing.
  */
 
 const CHAT = '#chat';
 
 let observadorChat = null;
 
-/** Barra de envio: controles fixos sem nome. */
+/** Send bar: fixed controls with no name. */
 function enriquecerBarraEnvio() {
     const opcoes = document.getElementById('options_button');
     if (opcoes && !opcoes.hasAttribute('aria-label')) {
         if (!opcoes.hasAttribute('role')) opcoes.setAttribute('role', 'button');
         opcoes.setAttribute('aria-label', 'Options menu');
-        // Semantica de menu (haspopup, expanded, foco) fica no modulo menus.js.
+        // Menu semantics (haspopup, expanded, focus) live in the menus.js module.
     }
 
     const texto = document.getElementById('send_textarea');
@@ -30,8 +30,8 @@ function enriquecerBarraEnvio() {
         texto.setAttribute('aria-label', 'Message input');
     }
 
-    // Botao "wand" que abre o menu de extensoes/acoes rapidas.
-    // A semantica de menu (haspopup, expanded, foco) fica no modulo menus.js.
+    // "wand" button that opens the extensions / quick actions menu.
+    // Menu semantics (haspopup, expanded, focus) live in the menus.js module.
     const wand = document.getElementById('extensionsMenuButton');
     if (wand && !wand.hasAttribute('aria-label')) {
         if (!wand.hasAttribute('role')) wand.setAttribute('role', 'button');
@@ -39,7 +39,7 @@ function enriquecerBarraEnvio() {
     }
 }
 
-/** Setas de swipe: sao <div> sem title, uma por mensagem. */
+/** Swipe arrows: they are <div> with no title, one per message. */
 function enriquecerSwipes(raiz) {
     raiz.querySelectorAll('.swipe_left').forEach(el => {
         if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
@@ -71,8 +71,8 @@ function ligarObservador() {
 function iniciar() {
     enriquecerBarraEnvio();
     ligarObservador();
-    // O #chat existe desde o carregamento, mas as mensagens (e seus swipes)
-    // chegam depois; observamos o body ate o chat aparecer/mudar.
+    // #chat exists from load, but the messages (and their swipes) arrive later;
+    // we observe the body until the chat appears/changes.
     new MutationObserver(() => {
         if (!observadorChat) ligarObservador();
         else aplicar();

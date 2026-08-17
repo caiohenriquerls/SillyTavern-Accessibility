@@ -1,13 +1,13 @@
 /**
  * Panel pin toggles accessibility
  *
- * Cada painel (drawer) tem um "pino" que o mantem aberto. A estrutura e um
- * checkbox de verdade dentro de um <label> SEM texto, mais duas metades
- * decorativas (os icones fa-unlock / fa-lock). O SillyTavern (keyboard.js)
- * torna essas metades focaveis como "button" -- sem nome -- e o checkbox, por
- * ter um label vazio, tambem fica sem nome.
+ * Each panel (drawer) has a "pin" that keeps it open. The structure is a real
+ * checkbox inside a <label> with NO text, plus two decorative halves (the
+ * fa-unlock / fa-lock icons). SillyTavern (keyboard.js) makes those halves
+ * focusable as an unnamed "button", and the checkbox, having an empty label,
+ * also ends up with no name.
  *
- * Aqui: damos nome ao checkbox e tiramos os icones decorativos da navegacao.
+ * Here: we name the checkbox and take the decorative icons out of navigation.
  */
 
 function enriquecerPino(div) {
@@ -16,7 +16,7 @@ function enriquecerPino(div) {
         const titulo = div.getAttribute('title') || 'Keep this panel open';
         cb.setAttribute('aria-label', titulo);
     }
-    // Metades decorativas (cadeado aberto/fechado): fora da leitura e da tabulacao.
+    // Decorative halves (open/closed lock): out of the reading and tab order.
     div.querySelectorAll('.unchecked, .checked').forEach(icone => {
         icone.setAttribute('aria-hidden', 'true');
         icone.setAttribute('tabindex', '-1');
@@ -24,13 +24,13 @@ function enriquecerPino(div) {
 }
 
 function aplicar() {
-    // Os divs de pino tem id terminando em "_pin_div".
+    // The pin divs have an id ending in "_pin_div".
     document.querySelectorAll('[id$="_pin_div"]').forEach(enriquecerPino);
 }
 
 function iniciar() {
     aplicar();
-    // Alguns paineis chegam depois; observador leve cobre isso.
+    // Some panels arrive later; a light observer covers that.
     new MutationObserver(() => {
         window.clearTimeout(iniciar._t);
         iniciar._t = window.setTimeout(aplicar, 200);

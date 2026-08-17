@@ -1,20 +1,20 @@
 /**
  * Lorebook Accessibility
  *
- * A tela de World Info / Lorebook do SillyTavern tem os mesmos problemas do
- * Prompt Manager, e alguns piores:
+ * SillyTavern's World Info / Lorebook screen has the same problems as the
+ * Prompt Manager, and a few worse ones:
  *
- *  - o interruptor de ativacao e uma <div> vazia cujo estado vive so na
- *    classe CSS (fa-toggle-on / fa-toggle-off);
- *  - o expansor tambem e uma <div>, sem aria-expanded;
- *  - mover, duplicar e apagar sao <i> vazios que nao recebem foco;
- *  - o seletor de posicao usa opcoes que sao apenas simbolos (arrows,
- *    engrenagem, robo), ilegiveis para leitor de tela;
- *  - os rotulos usam for="position", for="depth", for="order" mas os campos
- *    nao tem id correspondente, entao a associacao nao funciona.
+ *  - the activation toggle is an empty <div> whose state lives only in the CSS
+ *    class (fa-toggle-on / fa-toggle-off);
+ *  - the expander is also a <div>, with no aria-expanded;
+ *  - move, duplicate and delete are empty <i> elements that never get focus;
+ *  - the position selector uses options that are just symbols (arrows, gear,
+ *    robot), unreadable to a screen reader;
+ *  - the labels use for="position", for="depth", for="order" but the fields
+ *    have no matching id, so the association does not work.
  *
- * Este modulo nao altera o SillyTavern. Ele observa a lista e conserta a
- * arvore de acessibilidade a cada redesenho. Nada muda visualmente.
+ * This module does not modify SillyTavern. It observes the list and fixes the
+ * accessibility tree on every redraw. Nothing changes visually.
  */
 
 const LISTA = '#world_popup_entries_list';
@@ -26,7 +26,7 @@ const MOVER = '.move_entry_button';
 const DUPLICAR = '.duplicate_entry_button';
 const APAGAR = '.delete_entry_button';
 
-/** Opcoes do seletor de posicao que sao apenas simbolos. */
+/** Position selector options that are only symbols. */
 const POSICOES = {
     '0': 'Before Character Definitions',
     '1': 'After Character Definitions',
@@ -36,14 +36,14 @@ const POSICOES = {
     '3': "After Author's Note",
     '7': 'Outlet (named output)',
 };
-/** value 4 se desdobra por data-role. */
+/** value 4 expands by data-role. */
 const POSICOES_PROFUNDIDADE = {
     '0': 'At Depth, as System',
     '1': 'At Depth, as User',
     '2': 'At Depth, as Assistant',
 };
 
-/** Estados da entrada, hoje representados por bolinhas coloridas. */
+/** Entry states, currently shown as colored dots. */
 const ESTADOS = {
     constant: 'Constant, always active',
     normal: 'Normal, active by keyword',
@@ -54,7 +54,7 @@ let anunciador = null;
 let observador = null;
 
 /* ------------------------------------------------------------------ */
-/* utilidades                                                          */
+/* utilities                                                           */
 /* ------------------------------------------------------------------ */
 
 function anunciar(msg) {
@@ -92,7 +92,7 @@ function tratarTecla(ev) {
     ev.currentTarget.click();
 }
 
-/** Gera um id unico e estavel para associar rotulo a campo. */
+/** Generates a unique, stable id to associate a label with a field. */
 let contadorId = 0;
 function garantirId(el) {
     if (!el.id) el.id = 'lorea11y-' + (++contadorId);
@@ -100,19 +100,18 @@ function garantirId(el) {
 }
 
 /* ------------------------------------------------------------------ */
-/* conserto do painel: botao de abrir e barra de ferramentas           */
+/* panel: toolbar and world selectors                                  */
 /* ------------------------------------------------------------------ */
 
 /*
- * A propria barra de ferramentas do World Info (criar, importar, exportar,
- * nova entrada, expandir tudo, etc.) e uma fileira de <div>/<i> so com title,
- * e a busca, a ordenacao e os seletores de mundo nao tem rotulo. Aqui
- * consertamos essa moldura. As entradas continuam sendo tratadas por
- * enriquecerEntrada, e o icone que abre o painel na barra de cima pelo
- * modulo navigation.js.
+ * The World Info toolbar itself (create, import, export, new entry, expand
+ * all, etc.) is a row of <div>/<i> elements with only a title, and the search,
+ * sort and world selectors have no label. Here we fix that chrome. The entries
+ * are still handled by enriquecerEntrada, and the icon that opens the panel in
+ * the top bar by the navigation.js module.
  */
 
-/** Botoes da barra de ferramentas: id -> rotulo falado. */
+/** Toolbar buttons: id -> spoken label. */
 const FERRAMENTAS = {
     'world_create_button': 'Create new lorebook',
     'world_import_button': 'Import lorebook',
@@ -128,7 +127,7 @@ const FERRAMENTAS = {
     'world_refresh': 'Refresh entry list',
 };
 
-/** Campos nativos da barra que so precisam de rotulo. */
+/** Native toolbar fields that just need a label. */
 const CAMPOS_PAINEL = {
     'world_info_search': 'Search entries',
     'world_info_sort_order': 'Sort entries by',
@@ -136,7 +135,7 @@ const CAMPOS_PAINEL = {
     'world_info': 'Active World(s) for all chats',
 };
 
-/** Transforma uma <div>/<i> muda num botao operavel pelo teclado. */
+/** Turns a mute <div>/<i> into a keyboard-operable button. */
 function virarBotao(el, rotulo) {
     if (!el) return;
     const tag = el.tagName.toLowerCase();
@@ -152,12 +151,12 @@ function virarBotao(el, rotulo) {
 }
 
 function enriquecerPainel() {
-    // --- barra de ferramentas: botoes de acao
+    // --- toolbar: action buttons
     for (const [id, rotulo] of Object.entries(FERRAMENTAS)) {
         virarBotao(document.getElementById(id), rotulo);
     }
 
-    // --- busca, ordenacao e seletores de mundo
+    // --- search, sort and world selectors
     for (const [id, rotulo] of Object.entries(CAMPOS_PAINEL)) {
         const el = document.getElementById(id);
         if (!el) continue;
@@ -166,9 +165,9 @@ function enriquecerPainel() {
             garantirId(el);
             el.dataset.lorea11yLabel = '1';
         }
-        // O select2 desenha um combobox proprio ao lado do <select> oculto e so
-        // aparece depois que o painel abre; por isso rotulamos separado e sem
-        // depender da flag acima, ate o combobox existir.
+        // select2 draws its own combobox next to the hidden <select> and only
+        // appears after the panel opens; so we label it separately, without
+        // depending on the flag above, until the combobox exists.
         const combo = el.parentElement &&
             el.parentElement.querySelector('.select2-selection');
         if (combo && !combo.dataset.lorea11yLabel) {
@@ -179,22 +178,22 @@ function enriquecerPainel() {
 }
 
 /* ------------------------------------------------------------------ */
-/* conserto de uma entrada                                             */
+/* one entry                                                           */
 /* ------------------------------------------------------------------ */
 
 function enriquecerEntrada(entrada) {
     const nome = tituloDe(entrada);
 
-    // --- campo de titulo: sem rotulo proprio, so placeholder
+    // --- title field: no label of its own, only a placeholder
     const ta = entrada.querySelector(TITULO);
     if (ta && !ta.dataset.lorea11y) {
         ta.setAttribute('aria-label', 'Entry title');
         ta.dataset.lorea11y = '1';
-        // renomear os controles quando o titulo mudar
+        // rename the controls when the title changes
         ta.addEventListener('change', () => enriquecerEntrada(entrada));
     }
 
-    // --- interruptor de ativacao: div muda -> switch de verdade
+    // --- activation toggle: mute div -> real switch
     const kill = entrada.querySelector(KILL);
     if (kill) {
         const on = ligada(kill);
@@ -212,7 +211,7 @@ function enriquecerEntrada(entrada) {
         }
     }
 
-    // --- expansor: div muda -> botao com aria-expanded
+    // --- expander: mute div -> button with aria-expanded
     const exp = entrada.querySelector(EXPANDIR);
     if (exp) {
         const aberto = entrada.querySelector('.inline-drawer-content');
@@ -235,7 +234,7 @@ function enriquecerEntrada(entrada) {
         }
     }
 
-    // --- botoes de acao: <i> vazios sem foco
+    // --- action buttons: empty <i> with no focus
     const acoes = [
         [MOVER, 'Move or copy to another lorebook: '],
         [DUPLICAR, 'Duplicate: '],
@@ -253,7 +252,7 @@ function enriquecerEntrada(entrada) {
         }
     }
 
-    // --- seletor de estado: opcoes sao bolinhas coloridas
+    // --- state selector: options are colored dots
     const estado = entrada.querySelector('select[name="entryStateSelector"]');
     if (estado && !estado.dataset.lorea11y) {
         estado.setAttribute('aria-label', 'Activation state');
@@ -264,7 +263,7 @@ function enriquecerEntrada(entrada) {
         estado.dataset.lorea11y = '1';
     }
 
-    // --- seletor de posicao: opcoes sao setas e emoji
+    // --- position selector: options are arrows and emoji
     const pos = entrada.querySelector('select[name="position"]');
     if (pos && !pos.dataset.lorea11y) {
         pos.setAttribute('aria-label', 'Position in prompt');
@@ -280,7 +279,7 @@ function enriquecerEntrada(entrada) {
         pos.dataset.lorea11y = '1';
     }
 
-    // --- rotulos quebrados: for= aponta para id que nao existe
+    // --- broken labels: for= points to an id that does not exist
     const campos = [
         ['input[name="depth"]', 'Depth'],
         ['input[name="order"]', 'Order'],
@@ -309,9 +308,9 @@ function enriquecerEntrada(entrada) {
         });
     }
 
-    // --- botao de alternar modo das palavras-chave (etiquetas <-> texto).
-    // E um <button> de verdade, mas vem com tabindex="-1", entao o teclado
-    // nao o alcanca. O modo texto simples e bem mais facil no leitor de tela.
+    // --- keyword input mode toggle (tags <-> plain text).
+    // It is a real <button>, but comes with tabindex="-1", so the keyboard
+    // cannot reach it. Plain-text mode is much easier with a screen reader.
     entrada.querySelectorAll('.switch_input_type_icon').forEach(btn => {
         btn.setAttribute('tabindex', '0');
         const secundaria = !!btn.closest('.keysecondary');
@@ -320,19 +319,19 @@ function enriquecerEntrada(entrada) {
             : 'Switch keyword mode, tags or plain text');
     });
 
-    // --- contador de tokens
+    // --- token counter
     const tok = entrada.querySelector('.world_entry_form_token_counter');
     if (tok && !tok.dataset.lorea11y) {
         tok.setAttribute('aria-label', 'token count');
         tok.dataset.lorea11y = '1';
     }
 
-    // --- alca de arrastar e icones decorativos: fora da leitura
+    // --- drag handle and decorative icons: out of the reading order
     entrada.querySelectorAll('.drag-handle, .fa-circle-info').forEach(el => {
         el.setAttribute('aria-hidden', 'true');
     });
 
-    // --- a entrada inteira ganha rotulo de grupo
+    // --- the whole entry gets a group label
     if (!entrada.dataset.lorea11y) {
         entrada.setAttribute('role', 'group');
         entrada.dataset.lorea11y = '1';
@@ -341,12 +340,12 @@ function enriquecerEntrada(entrada) {
 }
 
 /* ------------------------------------------------------------------ */
-/* aplicacao                                                           */
+/* application                                                         */
 /* ------------------------------------------------------------------ */
 
 function aplicar() {
-    // A moldura do painel (botao de abrir, barra de ferramentas) existe desde
-    // o carregamento, mesmo antes de qualquer entrada aparecer.
+    // The panel chrome (open button, toolbar) exists from load, even before
+    // any entry appears.
     enriquecerPainel();
 
     const lista = document.querySelector(LISTA);
@@ -377,7 +376,7 @@ function iniciar() {
     criarAnunciador();
     enriquecerPainel();
     ligarObservador();
-    // a lista so existe depois que o painel de World Info e aberto
+    // the list only exists after the World Info panel is opened
     new MutationObserver(() => {
         if (!observador) ligarObservador();
         else aplicar();

@@ -1,25 +1,25 @@
 /**
  * Persona Management accessibility
  *
- * O painel de Personas tem, como o resto, botoes e campos que o leitor nao
- * anuncia bem. O SillyTavern (keyboard.js) ja da foco e Enter aos .menu_button
- * e aos cards .avatar-container, e a maioria dos botoes de icone tem title.
- * As lacunas reais aqui sao:
+ * The Personas panel has, like the rest, buttons and fields the reader does not
+ * announce well. SillyTavern (keyboard.js) already gives focus and Enter to the
+ * .menu_button and the .avatar-container cards, and most icon buttons have a
+ * title. The real gaps here are:
  *
- *  - os cards de persona (.avatar-container) nao tem papel nem nome: o unico
- *    title deles e o nome do arquivo (ex.: "user-default.png"), inutil;
- *  - a busca, a ordenacao, a descricao e a posicao da descricao nao tem
- *    rotulo proprio;
- *  - o botao "+" de adicionar persona e os botoes de travar (texto so "Default",
- *    "Character", "Chat") sao vagos fora de contexto.
+ *  - the persona cards (.avatar-container) have no role or name: their only
+ *    title is the file name (e.g. "user-default.png"), useless;
+ *  - the search, sort, description and description-position fields have no
+ *    label of their own;
+ *  - the "+" add-persona button and the lock buttons (text just "Default",
+ *    "Character", "Chat") are vague out of context.
  *
- * Modulo nao invasivo: so acrescenta papel e nome onde faltam.
+ * Non-invasive module: only adds role and name where they are missing.
  */
 
 const PAINEL = '#PersonaManagement';
 const CARDS = '#user_avatar_block .avatar-container';
 
-/** Botoes cujo texto/estado visivel e vago: id -> nome falado claro. */
+/** Buttons whose visible text/state is vague: id -> clear spoken name. */
 const BOTOES = {
     'create_dummy_persona': 'Create persona',
     'lock_persona_default': 'Set as default persona for new chats',
@@ -27,7 +27,7 @@ const BOTOES = {
     'lock_user_name': 'Lock persona to current chat',
 };
 
-/** Campos sem rotulo proprio: id -> nome falado. */
+/** Fields with no label of their own: id -> spoken name. */
 const CAMPOS = {
     'persona_search_bar': 'Search personas',
     'persona_sort_order': 'Sort personas by',
@@ -39,10 +39,10 @@ const CAMPOS = {
 let observador = null;
 
 /* ------------------------------------------------------------------ */
-/* utilidades                                                          */
+/* utilities                                                           */
 /* ------------------------------------------------------------------ */
 
-/** Remove emoji e simbolos decorativos para o nome nao sair ilegivel. */
+/** Removes emoji and decorative symbols so the name is not unreadable. */
 function limparNome(texto) {
     if (!texto) return '';
     let s = texto;
@@ -57,7 +57,7 @@ function limparNome(texto) {
 }
 
 /* ------------------------------------------------------------------ */
-/* conserto do painel                                                  */
+/* panel                                                               */
 /* ------------------------------------------------------------------ */
 
 function enriquecerBotoes(raiz) {
@@ -69,7 +69,7 @@ function enriquecerBotoes(raiz) {
         }
     }
 
-    // Botao "+" de adicionar persona (so tem o simbolo "+").
+    // "+" add-persona button (it only has the "+" symbol).
     const upload = raiz.querySelector('#user_avatar_block .avatar_upload');
     if (upload && !upload.hasAttribute('aria-label')) {
         upload.setAttribute('role', 'button');
@@ -95,7 +95,7 @@ function enriquecerCards(raiz) {
         if (!nome) return;
         const selecionada = card.classList.contains('selected');
         card.setAttribute('aria-label', 'Persona: ' + nome + (selecionada ? ' (selected)' : ''));
-        // Estado de persona atual tambem via aria-current.
+        // Current-persona state also via aria-current.
         if (selecionada) card.setAttribute('aria-current', 'true');
         else card.removeAttribute('aria-current');
     });
@@ -110,7 +110,7 @@ function aplicar() {
 }
 
 /* ------------------------------------------------------------------ */
-/* inicializacao                                                       */
+/* initialization                                                      */
 /* ------------------------------------------------------------------ */
 
 function ligarObservador() {

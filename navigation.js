@@ -1,20 +1,21 @@
 /**
  * Top navigation bar accessibility
  *
- * A barra de cima tem os icones que abrem os grandes paineis (configuracao da
- * IA, conexoes, formatacao, World Info, ajustes, extensoes, personas,
- * personagens). O SillyTavern (keyboard.js) ja torna esses .drawer-icon
- * focaveis e com role=button, e o title serve de nome. Faltam duas coisas:
+ * The top bar has the icons that open the big panels (AI configuration,
+ * connections, formatting, World Info, settings, extensions, personas,
+ * characters). SillyTavern (keyboard.js) already makes those .drawer-icon
+ * focusable and role=button, and the title serves as the name. Two things are
+ * missing:
  *
- *  - o estado: nada diz se o painel esta aberto ou fechado (aria-expanded);
- *  - um icone sem title (Backgrounds) fica sem nome nenhum.
+ *  - state: nothing tells whether the panel is open or closed (aria-expanded);
+ *  - one icon with no title (Backgrounds) ends up with no name at all.
  *
- * Modulo nao invasivo: so acrescenta a semantica que falta.
+ * Non-invasive module: only adds the missing semantics.
  */
 
 const BARRA = '#top-settings-holder';
 
-/** Nomes para os icones que nao tem title proprio. */
+/** Names for the icons that have no title of their own. */
 const NOMES_POR_DRAWER = {
     'backgrounds-button': 'Backgrounds',
 };
@@ -34,7 +35,7 @@ function enriquecerDrawer(drawer) {
 
     if (!icone.hasAttribute('role')) icone.setAttribute('role', 'button');
 
-    // Nome: usa o title (ja em ingles); se nao houver, usa o mapa.
+    // Name: use the title (already in English); if there is none, use the map.
     const temNome = icone.hasAttribute('aria-label') || icone.getAttribute('title');
     if (!temNome && NOMES_POR_DRAWER[drawer.id]) {
         icone.setAttribute('aria-label', NOMES_POR_DRAWER[drawer.id]);
@@ -42,8 +43,8 @@ function enriquecerDrawer(drawer) {
 
     if (painel.id) icone.setAttribute('aria-controls', painel.id);
 
-    // Estado aberto/fechado. O ST aplica a classe openDrawer as vezes depois de
-    // uma animacao e fecha no clique de fora, entao observamos a classe.
+    // Open/closed state. SillyTavern sometimes applies the openDrawer class only
+    // after an animation and closes on an outside click, so we watch the class.
     sincronizarEstado(icone, painel);
     if (!observados.has(painel)) {
         observados.add(painel);
@@ -60,8 +61,8 @@ function aplicar() {
 
 function iniciar() {
     aplicar();
-    // A barra existe desde o carregamento; um observador leve cobre qualquer
-    // drawer adicionado por extensoes depois.
+    // The bar exists from load; a light observer covers any drawer added by
+    // extensions later.
     const barra = document.querySelector(BARRA);
     if (barra) {
         new MutationObserver(() => {

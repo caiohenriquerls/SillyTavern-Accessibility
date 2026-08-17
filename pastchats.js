@@ -1,13 +1,13 @@
 /**
  * Past chats (Manage chat files) accessibility
  *
- * A janela de "Chat History" lista os chats salvos. Cada item e um
- * .select_chat_block clicavel, mas o nome do chat mora num <small> dentro dele,
- * entao o bloco em si nao tem nome. Os botoes de renomear/exportar/apagar tem
- * title (o core cobre), mas ficam mais claros com o nome do chat junto. A busca
- * e o botao de fechar tambem estao sem rotulo.
+ * The "Chat History" window lists the saved chats. Each item is a clickable
+ * .select_chat_block, but the chat name lives in a <small> inside it, so the
+ * block itself has no name. The rename/export/delete buttons have a title (core
+ * covers them), but they are clearer with the chat name attached. The search
+ * field and the close button also have no label.
  *
- * Modulo nao invasivo: so acrescenta papel e nome onde faltam.
+ * Non-invasive module: only adds role and name where they are missing.
  */
 
 const POPUP = '#shadow_select_chat_popup';
@@ -15,7 +15,7 @@ const LISTA = '#select_chat_div';
 const BLOCO = '.select_chat_block';
 const NOME = '.select_chat_block_filename';
 
-/** Botoes de acao dentro de cada bloco: classe -> prefixo do nome. */
+/** Action buttons inside each block: class -> name prefix. */
 const ACOES = [
     ['.renameChatButton', 'Rename chat: '],
     ['.exportRawChatButton', 'Export chat as JSONL: '],

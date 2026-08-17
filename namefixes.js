@@ -1,16 +1,15 @@
 /**
  * Name fixes for remaining unnamed focusable controls
  *
- * Uma auditoria mostrou varios controles focaveis (icones) que ficam so
- * "button" para o leitor de tela, sem nome. Aqui damos nome a eles por
- * categoria e, como rede de seguranca, um mapa de icone -> nome para os
- * botoes de icone que sobrarem.
+ * An audit found several focusable controls (icons) that end up as just
+ * "button" for the screen reader, with no name. Here we name them by category
+ * and, as a safety net, an icon -> name map for the icon buttons that are left.
  *
- * So mexemos em quem esta VISIVEL, focavel e sem nome -- nunca sobrescreve
- * um nome existente.
+ * We only touch controls that are focusable and unnamed -- it never overwrites
+ * an existing name.
  */
 
-/** Botoes de icone por id (contexto conhecido). */
+/** Icon buttons by id (known context). */
 const POR_ID = {
     'tts_refresh': 'Refresh available voices',
     'tts_voices': 'Available voices',
@@ -19,7 +18,7 @@ const POR_ID = {
     'groupCurrentMemberPopoutButton': 'Pop out current members to window',
 };
 
-/** Rede de seguranca: icone FontAwesome -> nome. */
+/** Safety net: FontAwesome icon -> name. */
 const POR_ICONE = {
     'fa-power-off': 'Toggle on or off',
     'fa-bolt': 'Quick action',
@@ -57,9 +56,9 @@ function focavelSemNome(el) {
     if (el.getAttribute('tabindex') === '-1') return false;
     if (el.getAttribute('aria-hidden') === 'true') return false;
     if (el.disabled) return false;
-    // Nao exigimos visibilidade: rotulamos tambem o que esta oculto agora (e ate
-    // os templates), para o nome ja estar pronto quando o elemento aparecer -- o
-    // observador de childList nao dispara quando um painel so troca de display.
+    // We do not require visibility: we also label what is hidden now (and even
+    // templates), so the name is ready when the element appears -- the childList
+    // observer does not fire when a panel only changes display.
     if (el.hasAttribute('aria-label') || el.hasAttribute('aria-labelledby')) return false;
     if (el.getAttribute('title')) return false;
     if (el.labels && el.labels.length && [...el.labels].some(l => l.textContent.trim())) return false;
@@ -69,7 +68,7 @@ function focavelSemNome(el) {
     return true;
 }
 
-/** Primeiro token fa-* significativo do elemento ou de um <i> filho. */
+/** First meaningful fa-* token of the element or of a child <i>. */
 function iconeDe(el) {
     const classes = [el, ...el.querySelectorAll('i, span')]
         .flatMap(n => [...n.classList]);
@@ -77,28 +76,28 @@ function iconeDe(el) {
 }
 
 function aplicar() {
-    // --- botoes que so tem data-tooltip: o SillyTavern usa esse atributo para
-    // um tooltip proprio, mas o leitor de tela NAO le data-tooltip. Viramos ele
-    // em aria-label (ex.: o "checkpoint" nas mensagens).
+    // --- buttons that only have data-tooltip: SillyTavern uses that attribute
+    // for its own tooltip, but the screen reader does NOT read data-tooltip. We
+    // turn it into aria-label (e.g. the "checkpoint" on messages).
     document.querySelectorAll('[data-tooltip]').forEach(el => {
         if (!focavelSemNome(el)) return;
         const dica = (el.getAttribute('data-tooltip') || '').split('\n')[0].trim();
         if (dica) el.setAttribute('aria-label', dica);
     });
 
-    // --- toggles de ordem de sampler (divs vazios, ex.: NovelAI #novel_order)
+    // --- sampler-order toggles (empty divs, e.g. NovelAI #novel_order)
     document.querySelectorAll('.toggle_button').forEach(el => {
         if (focavelSemNome(el)) el.setAttribute('aria-label', 'Toggle on or off');
     });
 
-    // --- tags removiveis: o "x" de remover
+    // --- removable tags: the "x" remove button
     document.querySelectorAll('.tag_remove').forEach(x => {
         if (!focavelSemNome(x)) return;
         const nome = x.closest('.tag')?.querySelector('.tag_name')?.textContent?.trim();
         x.setAttribute('aria-label', nome ? 'Remove tag: ' + nome : 'Remove tag');
     });
 
-    // --- botoes de filtro/gestao de tags (icones sem texto)
+    // --- tag filter/manage buttons (icons with no text)
     const tagBotoes = { filterByFavorites: 'Filter by favorites', manageTags: 'Manage tags' };
     for (const [cls, nome] of Object.entries(tagBotoes)) {
         document.querySelectorAll('.tag.' + cls).forEach(t => {
@@ -106,13 +105,13 @@ function aplicar() {
         });
     }
 
-    // --- por id conhecido
+    // --- by known id
     for (const [id, nome] of Object.entries(POR_ID)) {
         const el = document.getElementById(id);
         if (el && focavelSemNome(el)) el.setAttribute('aria-label', nome);
     }
 
-    // --- rede de seguranca por icone, para o que sobrou
+    // --- icon safety net, for whatever is left
     const sel = '.interactable, [role="button"], .menu_button';
     document.querySelectorAll(sel).forEach(el => {
         if (!focavelSemNome(el)) return;

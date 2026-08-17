@@ -1,23 +1,24 @@
 /**
  * Popup menus (options + wand) accessibility
  *
- * O botao de opcoes (#options_button) e o botao "wand" (#extensionsMenuButton)
- * abrem menus (#options / #extensionsMenu) que ficam longe deles no DOM, la
- * embaixo depois do chat. O SillyTavern mostra o menu mas NAO move o foco para
- * ele. Resultado: o leitor de tela anunciava "tem submenu", mas o foco ficava
- * preso no botao e os itens eram lidos como links soltos abaixo da conversa.
+ * The options button (#options_button) and the "wand" button
+ * (#extensionsMenuButton) open menus (#options / #extensionsMenu) that sit far
+ * from them in the DOM, down below the chat. SillyTavern shows the menu but does
+ * NOT move focus into it. Result: the screen reader announced "has submenu" but
+ * focus stayed on the button and the items were read as stray links below the
+ * conversation.
  *
- * Correcao (padrao "disclosure"):
- *  - o botao ganha aria-haspopup, aria-controls e aria-expanded;
- *  - ao abrir, o foco vai para o primeiro item; ao fechar, volta ao botao;
- *  - Escape fecha.
+ * Fix (the "disclosure" pattern):
+ *  - the button gets aria-haspopup, aria-controls and aria-expanded;
+ *  - on open, focus moves to the first item; on close, back to the button;
+ *  - Escape closes.
  *
- * IMPORTANTE: NAO usamos role=menu / role=menuitem de proposito. Os itens do
- * SillyTavern sao <a> sem href, ativados pelo handler de teclado do core (Enter
- * -> click). Marcar role=menu coloca o NVDA em "modo menu", que intercepta o
- * Enter e impede a ativacao (ex.: nao dava para regenerar). Deixando os itens
- * como links focaveis normais, o usuario navega com Tab (ou setas no modo
- * navegacao) e ativa com Enter, exatamente como o resto do app.
+ * IMPORTANT: we deliberately do NOT use role=menu / role=menuitem. SillyTavern's
+ * items are <a> without href, activated by the core keyboard handler (Enter ->
+ * click). Marking role=menu puts NVDA into "menu mode", which intercepts Enter
+ * and blocks activation (e.g. regenerate stopped working). By leaving the items
+ * as plain focusable links, the user navigates with Tab (or arrows in browse
+ * mode) and activates with Enter, exactly like the rest of the app.
  */
 
 const MENUS = [
@@ -50,9 +51,9 @@ function configurarMenu({ btn: btnId, menu: menuId, itens: itemSel }) {
             const lista = itens();
             if (lista[0]) window.setTimeout(() => lista[0].focus(), 0);
         } else {
-            // Ao fechar, so devolvemos o foco se ele se perdeu (foi para o body)
-            // ou ainda esta dentro do menu -- assim nao atrapalhamos acoes que
-            // movem o foco de proposito (ex.: regenerar foca o chat).
+            // On close, we only return focus if it was lost (went to the body)
+            // or is still inside the menu -- this way we do not interfere with
+            // actions that move focus on purpose (e.g. regenerate focuses the chat).
             const ae = document.activeElement;
             if (!ae || ae === document.body || menu.contains(ae)) {
                 window.setTimeout(() => btn.focus(), 0);
@@ -65,8 +66,8 @@ function configurarMenu({ btn: btnId, menu: menuId, itens: itemSel }) {
     });
     sincronizar();
 
-    // Escape fecha o menu e devolve o foco ao botao. Nao tocamos em mais nenhuma
-    // tecla, para nao interferir na ativacao dos itens (Enter continua nativo).
+    // Escape closes the menu and returns focus to the button. We do not touch
+    // any other key, so as not to interfere with item activation (Enter stays native).
     menu.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && visivel(menu)) {
             e.preventDefault();

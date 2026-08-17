@@ -1,27 +1,27 @@
 /**
  * Collapsible sections (inline-drawer) accessibility
  *
- * O SillyTavern usa .inline-drawer por toda parte (cada extensao no painel de
- * Extensions e uma; tambem em configuracoes, grupos, etc.). O cabecalho e um
- * .inline-drawer-toggle com o texto da secao, mas quem recebe o foco pelo
- * teclado e o chevron .inline-drawer-icon dentro dele -- e esse chevron nao
- * tem nome nem estado. Resultado: o leitor anuncia "button" sem dizer qual
- * secao nem se esta aberta.
+ * SillyTavern uses .inline-drawer everywhere (each extension in the Extensions
+ * panel is one; also in settings, groups, etc.). The header is an
+ * .inline-drawer-toggle with the section text, but what receives keyboard focus
+ * is the .inline-drawer-icon chevron inside it -- and that chevron has no name
+ * or state. Result: the reader announces "button" without saying which section
+ * or whether it is open.
  *
- * Aqui damos ao chevron o nome da secao (role=button + aria-label) e mantemos
- * o aria-expanded em dia. As entradas do World Info tem tratamento proprio no
- * lorebook.js (marcadas com data-lorea11y), entao pulamos elas.
+ * Here we give the chevron the section name (role=button + aria-label) and keep
+ * aria-expanded up to date. World Info entries have their own handling in
+ * lorebook.js (flagged with data-lorea11y), so we skip them.
  */
 
 const TOGGLE = '.inline-drawer-toggle';
 
-/** O elemento focavel: o proprio toggle (quando ja e o icone) ou o chevron. */
+/** The focusable element: the toggle itself (when it is the icon) or the chevron. */
 function iconeDe(toggle) {
     if (toggle.classList.contains('inline-drawer-icon')) return toggle;
     return toggle.querySelector('.inline-drawer-icon');
 }
 
-/** Texto do cabecalho, limpo (remove o "?" solto dos links de ajuda). */
+/** Header text, cleaned (removes the stray "?" from help links). */
 function textoDe(toggle) {
     return (toggle.textContent || '')
         .replace(/\s+/g, ' ')
@@ -30,14 +30,14 @@ function textoDe(toggle) {
 }
 
 function atualizarEstado(icone) {
-    // O ST alterna a classe "up" (aberto) / "down" (fechado) no chevron.
+    // SillyTavern toggles the "up" (open) / "down" (closed) class on the chevron.
     icone.setAttribute('aria-expanded', icone.classList.contains('up') ? 'true' : 'false');
 }
 
 function enriquecer(toggle) {
     const icone = iconeDe(toggle);
     if (!icone) return;
-    if (icone.dataset.lorea11y) return; // ja tratado pelo lorebook.js
+    if (icone.dataset.lorea11y) return; // already handled by lorebook.js
 
     atualizarEstado(icone);
 
@@ -57,8 +57,8 @@ function aplicar(raiz = document) {
 function iniciar() {
     aplicar();
 
-    // Atualiza o estado logo apos qualquer clique num cabecalho (o ST alterna a
-    // classe do chevron de forma sincrona, entao um tempo curto basta).
+    // Update the state right after any click on a header (SillyTavern toggles
+    // the chevron class synchronously, so a short delay is enough).
     document.addEventListener('click', (e) => {
         const alvo = e.target instanceof Element ? e.target.closest(TOGGLE) : null;
         if (!alvo) return;
@@ -68,7 +68,7 @@ function iniciar() {
         }
     }, true);
 
-    // Secoes de extensoes e outras chegam depois; observador leve cobre isso.
+    // Extension sections and others arrive later; a light observer covers that.
     new MutationObserver(() => {
         window.clearTimeout(iniciar._t);
         iniciar._t = window.setTimeout(() => aplicar(), 150);

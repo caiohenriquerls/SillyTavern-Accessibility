@@ -1,36 +1,36 @@
 /**
  * Character / Group management accessibility
  *
- * O painel da direita (lista de personagens, criacao e edicao de personagem,
- * grupos e pastas) sofre dos mesmos problemas: botoes que sao <div>/<i> so com
- * title, campos sem rotulo proprio e cards de personagem que o leitor de tela
- * anuncia como "clicavel" sem dizer de quem sao.
+ * The right-hand panel (character list, character create/edit, groups and
+ * folders) suffers from the same problems: buttons that are <div>/<i> with
+ * only a title, fields with no label of their own, and character cards that a
+ * screen reader announces as "clickable" without saying whose they are.
  *
- * O SillyTavern ja tem o keyboard.js, que torna .menu_button, .character_select
- * etc. focaveis e ativaveis por Enter. Alem disso, ao marcarmos role="button" o
- * proprio NVDA passa a ativar por Enter e Espaco. Entao aqui NAO adicionamos
- * tratadores de teclado (evita clique duplicado): so acrescentamos a semantica
- * que falta -- papel, nome e estado.
+ * SillyTavern already has keyboard.js, which makes .menu_button,
+ * .character_select etc. focusable and Enter-activatable. On top of that, once
+ * we mark role="button" NVDA itself activates on Enter and Space. So here we do
+ * NOT add keyboard handlers (avoids a double click): we only add the missing
+ * semantics -- role, name and state.
  *
- * Modulo nao invasivo: observa e conserta a arvore de acessibilidade a cada
- * redesenho. Nada muda visualmente.
+ * Non-invasive module: observes and fixes the accessibility tree on every
+ * redraw. Nothing changes visually.
  */
 
 const PAINEL_DIR = '#right-nav-panel';
 const CARDS = '.character_select, .group_select, .bogus_folder_select';
 
 /*
- * Rotulos em ingles, seguindo o padrao do proprio SillyTavern. Nao copiamos o
- * title porque a traducao (em qualquer idioma) do ST e incompleta e o resultado
- * fica inconsistente; aqui cravamos o nome das funcoes principais.
+ * English labels, following SillyTavern's own convention. We do not copy the
+ * title because SillyTavern's translation (in any language) is incomplete and
+ * the result is inconsistent; here we hard-code the names of the main actions.
  */
 const BOTOES_PT = {
-    // barra da lista de personagens
+    // character list toolbar
     'rm_button_create': 'Create New Character',
     'character_import_button': 'Import Character from File',
     'external_import_button': 'Import content from external URL',
     'rm_button_group_chats': 'Create New Chat Group',
-    // barra do formulario de edicao do personagem
+    // character edit-form toolbar
     'rm_button_back': 'Back to character list',
     'favorite_button': 'Add to Favorites',
     'advanced_div': 'Advanced Definitions',
@@ -39,7 +39,7 @@ const BOTOES_PT = {
     'export_button': 'Export and Download',
     'dupe_button': 'Duplicate Character',
     'delete_button': 'Delete Character',
-    // formulario de criacao/edicao de grupo
+    // group create/edit form
     'rm_button_back_from_group': 'Back to character list',
     'rm_group_submit': 'Create group',
     'rm_group_delete': 'Delete group',
@@ -48,13 +48,13 @@ const BOTOES_PT = {
     'group_favorite_button': 'Add group to Favorites',
 };
 
-/** Botoes principais sem id unico (por seletor de classe). */
+/** Main buttons without a unique id (matched by class). */
 const BOTOES_PT_SELETOR = [
     ['.chat_lorebook_button', 'Chat Lore'],
     ['.open_alternate_greetings', 'Alternate Greetings'],
 ];
 
-/** Campos do formulario de personagem: id -> nome falado. */
+/** Character form fields: id -> spoken name. */
 const CAMPOS_PERSONAGEM = {
     'character_name_pole': 'Character Name',
     'description_textarea': 'Character Description',
@@ -67,7 +67,7 @@ const CAMPOS_PERSONAGEM = {
     'talkativeness_slider': 'Talkativeness',
     'character_sort_order': 'Characters sorting order',
     'character_search_bar': 'Search characters',
-    // campos do formulario de grupo
+    // group form fields
     'rm_group_chat_name': 'Group name',
     'groupTagInput': 'Search or create tags',
     'rm_group_members_filter': 'Search current members',
@@ -78,10 +78,10 @@ const CAMPOS_PERSONAGEM = {
 let observadorDir = null;
 
 /* ------------------------------------------------------------------ */
-/* utilidades                                                          */
+/* utilities                                                           */
 /* ------------------------------------------------------------------ */
 
-/** Remove emoji e simbolos decorativos para o nome nao sair ilegivel. */
+/** Removes emoji and decorative symbols so the name is not unreadable. */
 function limparNome(texto) {
     if (!texto) return '';
     let s = texto;
@@ -95,7 +95,7 @@ function limparNome(texto) {
     return s.replace(/\s+/g, ' ').trim();
 }
 
-/** Um elemento so recebe role=button se nao for nativo nem contiver um. */
+/** An element only gets role=button if it is not native and contains none. */
 function podeVirarBotao(el) {
     const tag = el.tagName.toLowerCase();
     if (tag === 'button' || tag === 'a' || tag === 'input' ||
@@ -104,17 +104,17 @@ function podeVirarBotao(el) {
     return true;
 }
 
-/** Nome visivel do proprio elemento (sem contar filhos interativos). */
+/** The element's own visible text (not counting interactive children). */
 function temTextoVisivel(el) {
     return (el.textContent || '').trim().length > 0;
 }
 
 /* ------------------------------------------------------------------ */
-/* conserto do painel                                                  */
+/* panel                                                               */
 /* ------------------------------------------------------------------ */
 
 function enriquecerBotoesIcone(raiz) {
-    // Botoes principais por classe: rotulo em portugues garantido.
+    // Main buttons by class: guaranteed label.
     for (const [sel, rotulo] of BOTOES_PT_SELETOR) {
         raiz.querySelectorAll(sel).forEach(el => {
             if (podeVirarBotao(el) && !el.hasAttribute('role')) el.setAttribute('role', 'button');
@@ -130,16 +130,16 @@ function enriquecerBotoesIcone(raiz) {
         if (fixo) {
             el.setAttribute('aria-label', fixo);
         } else if (!temTextoVisivel(el)) {
-            // icone puro sem rotulo proprio: usa o title como ultimo recurso
-            // (pode cair para ingles se o ST nao tiver traduzido aquele texto).
+            // pure icon with no label of its own: use the title as a last resort
+            // (may fall back to English if SillyTavern has not translated it).
             const title = el.getAttribute('title');
             if (title) el.setAttribute('aria-label', title.split('\n')[0].trim());
         }
-        // Se ja tem texto visivel, o proprio texto e o nome; so o role basta.
+        // If it already has visible text, that text is the name; role is enough.
     });
 
-    // Botao de salvar/criar: e um <input type="submit"> vazio dentro de um
-    // <label> so com icone, entao fica sem nome nenhum para o leitor.
+    // Save/create button: it is an empty <input type="submit"> inside a <label>
+    // that has only an icon, so it ends up with no name at all for the reader.
     const submit = raiz.querySelector('#create_button');
     if (submit && !submit.hasAttribute('aria-label')) {
         submit.setAttribute('aria-label', 'Create or save character');
@@ -159,7 +159,7 @@ function enriquecerCards(raiz) {
     raiz.querySelectorAll(CARDS).forEach(card => {
         if (!card.hasAttribute('role')) card.setAttribute('role', 'button');
 
-        // Card especial de "voltar uma pasta" na navegacao de pastas.
+        // Special "go back one folder" card in the folder navigation.
         if (card.classList.contains('bogus_folder_select_back')) {
             card.setAttribute('aria-label', 'Go back one folder');
             return;
@@ -176,10 +176,10 @@ function enriquecerCards(raiz) {
 }
 
 /**
- * Membros de grupo (.group_member): o card nao e focavel e mostra o nome num
- * <span>. Os botoes de acao (silenciar, mover, remover, adicionar) tem title,
- * mas nao dizem de quem sao. Acrescentamos o nome do personagem a cada acao e
- * damos um rotulo ao card inteiro.
+ * Group members (.group_member): the card is not focusable and shows the name
+ * in a <span>. The action buttons (mute, move, remove, add) have a title but do
+ * not say whose they are. We add the character's name to each action and give
+ * the whole card a label.
  */
 function enriquecerMembrosDeGrupo(raiz) {
     raiz.querySelectorAll('.group_member').forEach(membro => {
@@ -189,7 +189,7 @@ function enriquecerMembrosDeGrupo(raiz) {
         if (!membro.hasAttribute('aria-label')) {
             membro.setAttribute('aria-label', 'Group member: ' + nome);
         }
-        // Da contexto (nome) a cada botao de acao do membro.
+        // Give context (the name) to each of the member's action buttons.
         membro.querySelectorAll('.right_menu_button, .menu_button').forEach(btn => {
             if (btn.dataset.a11yMember) return;
             const title = btn.getAttribute('title');
@@ -206,13 +206,13 @@ function aplicar() {
         enriquecerCampos(painel);
         enriquecerMembrosDeGrupo(painel);
     }
-    // Cards podem aparecer tambem fora do painel (ex.: busca/popup), entao
-    // varremos o documento inteiro -- e barato e idempotente.
+    // Cards can also appear outside the panel (e.g. search/popup), so we scan
+    // the whole document -- it is cheap and idempotent.
     enriquecerCards(document);
 }
 
 /* ------------------------------------------------------------------ */
-/* inicializacao                                                       */
+/* initialization                                                      */
 /* ------------------------------------------------------------------ */
 
 function ligarObservador() {
@@ -228,8 +228,8 @@ function ligarObservador() {
 
 function iniciar() {
     ligarObservador();
-    // O painel da direita ja existe no carregamento, mas a lista so e
-    // preenchida depois; observamos o body ate ele aparecer/mudar.
+    // The right-hand panel exists from load, but the list is only filled in
+    // later; we observe the body until it appears/changes.
     new MutationObserver(() => {
         if (!observadorDir) ligarObservador();
         else aplicar();

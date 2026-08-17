@@ -1,17 +1,17 @@
 /**
  * Promote title -> aria-label
  *
- * Quase todos os botoes de icone do SillyTavern sao nomeados so pelo atributo
- * `title`. Isso funciona no modo foco do NVDA (Tab), mas no modo de navegacao
- * (setas / cursor virtual) o `title` NAO e lido de forma confiavel -- entao o
- * usuario passava pelos botoes (AI Response Configuration, API Connections, os
- * botoes das mensagens, etc.) sem ouvir nome nenhum.
+ * Almost every icon button in SillyTavern is named only by the `title`
+ * attribute. That works in NVDA's focus mode (Tab), but in browse mode (arrows
+ * / virtual cursor) `title` is NOT read reliably -- so the user was passing over
+ * buttons (AI Response Configuration, API Connections, the message buttons,
+ * etc.) without hearing any name.
  *
- * A correcao correta e dar a esses controles um `aria-label`, que e lido em
- * todos os modos e leitores. Aqui copiamos o `title` (a primeira linha, que e
- * o nome; o resto costuma ser instrucao/atalho) para `aria-label`, mantendo o
- * `title` para o tooltip visual. So mexemos em quem e focavel, nao tem nome
- * ainda e nao tem texto proprio (texto proprio ja e lido nas setas).
+ * The correct fix is to give those controls an `aria-label`, which is read in
+ * every mode and reader. Here we copy the `title` (the first line, which is the
+ * name; the rest is usually instructions/shortcuts) into `aria-label`, keeping
+ * the `title` for the visual tooltip. We only touch elements that are focusable,
+ * not yet named, and have no own text (own text is already read with arrows).
  */
 
 const FOCAVEL = '.interactable, [role="button"], .menu_button, .right_menu_button, '
@@ -23,9 +23,9 @@ function promover(el) {
     if (el.getAttribute('aria-hidden') === 'true') return;
     if (el.disabled) return;
     if (el.hasAttribute('aria-label') || el.hasAttribute('aria-labelledby')) return;
-    // Texto proprio (incluindo de filhos) ja e anunciado nas setas.
+    // Own text (including from children) is already announced with arrows.
     if ((el.textContent || '').trim()) return;
-    // Campo de formulario com <label> associado tambem ja tem nome.
+    // A form field with an associated <label> also already has a name.
     if (el.labels && el.labels.length && [...el.labels].some(l => l.textContent.trim())) return;
     const title = el.getAttribute('title');
     if (!title || !title.trim()) return;
@@ -41,7 +41,7 @@ function aplicar() {
 
 function iniciar() {
     aplicar();
-    // Mensagens, cards e paineis chegam depois; observador leve cobre isso.
+    // Messages, cards and panels arrive later; a light observer covers that.
     new MutationObserver(() => {
         window.clearTimeout(iniciar._t);
         iniciar._t = window.setTimeout(aplicar, 150);
