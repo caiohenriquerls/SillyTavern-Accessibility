@@ -97,6 +97,18 @@
     border-radius: 3px;
 }
 
+/* Tela de Regex: linhas de script, seus controles e o editor. */
+.regex-script-label [role="button"]:focus-visible,
+.regex-script-label .menu_button:focus-visible,
+.regex-script-label input:focus-visible,
+.regex_editor input:focus-visible,
+.regex_editor textarea:focus-visible,
+.regex_editor select:focus-visible {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
 /* Painel de personas: botoes, campos e cards. */
 #PersonaManagement [role="button"]:focus-visible,
 #PersonaManagement .menu_button:focus-visible,
