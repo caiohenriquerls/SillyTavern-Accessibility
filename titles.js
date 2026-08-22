@@ -18,6 +18,12 @@ const FOCAVEL = '.interactable, [role="button"], .menu_button, .right_menu_butto
     + '.drawer-icon, .inline-drawer-icon, .mes_button, button, a, input, select, '
     + 'textarea, [tabindex="0"]';
 
+/** First non-empty line of a title (the name; the rest is usually a shortcut). */
+function nomeDoTitle(title) {
+    if (!title) return '';
+    return title.split(/[\r\n]/).map(s => s.trim()).find(Boolean) || '';
+}
+
 function promover(el) {
     if (el.getAttribute('tabindex') === '-1') return;
     if (el.getAttribute('aria-hidden') === 'true') return;
@@ -27,10 +33,14 @@ function promover(el) {
     if ((el.textContent || '').trim()) return;
     // A form field with an associated <label> also already has a name.
     if (el.labels && el.labels.length && [...el.labels].some(l => l.textContent.trim())) return;
-    const title = el.getAttribute('title');
-    if (!title || !title.trim()) return;
-    const nome = title.split(/[\r\n]/).map(s => s.trim()).find(Boolean);
-    if (nome) el.setAttribute('aria-label', nome);
+    const nome = nomeDoTitle(el.getAttribute('title'));
+    if (nome) {
+        el.setAttribute('aria-label', nome);
+        // Remember this label came from the title, so we can keep it in sync if
+        // the app later changes the title (e.g. a toggle button whose title flips
+        // between "Show more" and "Show less").
+        el.dataset.a11yFromTitle = '1';
+    }
 }
 
 function aplicar() {
@@ -46,6 +56,18 @@ function iniciar() {
         window.clearTimeout(iniciar._t);
         iniciar._t = window.setTimeout(aplicar, 150);
     }).observe(document.body, { childList: true, subtree: true });
+
+    // Keep title-derived aria-labels in sync when the app changes the title on
+    // the same element (otherwise the screen reader keeps reading the old name).
+    new MutationObserver(muts => {
+        for (const mut of muts) {
+            const el = mut.target;
+            if (el instanceof HTMLElement && el.dataset.a11yFromTitle) {
+                const nome = nomeDoTitle(el.getAttribute('title'));
+                if (nome) el.setAttribute('aria-label', nome);
+            }
+        }
+    }).observe(document.body, { attributes: true, attributeFilter: ['title'], subtree: true });
 }
 
 if (document.readyState === 'loading') {
