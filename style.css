@@ -97,6 +97,34 @@
     border-radius: 3px;
 }
 
+/* Regex: os interruptores (ligar/desligar de cada script e permitir preset/
+   scoped) sao checkboxes com display:none no CSS do regex -- so operaveis com
+   mouse. Aqui os tornamos VISUALMENTE escondidos mas FOCAVEIS (alcancaveis por
+   teclado e leitor de tela). O icone visual do toggle continua sendo os <span>
+   irmaos, que reagem ao :checked normalmente. */
+.regex-script-label input.disable_regex,
+.regex_settings input.enable_scoped {
+    display: inline-block !important;
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+}
+/* Foco visivel quando o checkbox escondido recebe foco: destacamos o icone. */
+.regex-script-label input.disable_regex:focus-visible ~ .regex-toggle-on,
+.regex-script-label input.disable_regex:focus-visible ~ .regex-toggle-off,
+.regex_settings input.enable_scoped:focus-visible ~ .regex-toggle-on,
+.regex_settings input.enable_scoped:focus-visible ~ .regex-toggle-off {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
 /* Tela de Regex: linhas de script, seus controles e o editor. */
 .regex-script-label [role="button"]:focus-visible,
 .regex-script-label .menu_button:focus-visible,

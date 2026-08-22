@@ -51,7 +51,9 @@ function enriquecerLinha(row) {
     if (!row.hasAttribute('role')) row.setAttribute('role', 'group');
     row.setAttribute('aria-label', 'Regex script: ' + nome);
 
-    // Interruptor ligar/desligar (checkbox; marcado = desativado).
+    // Interruptor ligar/desligar. O checkbox e display:none no CSS do regex; o
+    // style.css desta extensao o torna focavel (visualmente escondido). Marcado
+    // = desativado.
     const toggle = row.querySelector('.disable_regex');
     if (toggle) toggle.setAttribute('aria-label', 'Disable script: ' + nome);
 
@@ -59,8 +61,10 @@ function enriquecerLinha(row) {
     const bulk = row.querySelector('.regex_bulk_checkbox');
     if (bulk && !bulk.hasAttribute('aria-label')) bulk.setAttribute('aria-label', 'Select script: ' + nome);
 
-    // Expandir mais opcoes (checkbox dentro do label .regex_script_expand).
-    const expand = row.querySelector('.regex_script_expand input[type="checkbox"]');
+    // Expandir mais opcoes. O elemento FOCAVEL e o <label class="menu_button
+    // regex_script_expand"> (o checkbox interno e display:none), entao rotulamos
+    // o label.
+    const expand = row.querySelector('label.regex_script_expand');
     if (expand) expand.setAttribute('aria-label', 'Show more options: ' + nome);
 
     // Botoes de acao: nome generico + nome do script para contexto.
@@ -86,11 +90,29 @@ function enriquecerEditor() {
     }
 }
 
+/** Toggles de "permitir preset/scoped" no painel (checkboxes display:none). */
+const TOGGLES_PAINEL = {
+    'regex_preset_toggle': 'Allow preset regex scripts',
+    'regex_scoped_toggle': 'Allow scoped regex scripts',
+};
+
+function enriquecerTogglesPainel() {
+    for (const [id, rotulo] of Object.entries(TOGGLES_PAINEL)) {
+        const cb = document.getElementById(id);
+        if (!cb) continue;
+        if (!cb.hasAttribute('aria-label')) cb.setAttribute('aria-label', rotulo);
+        // esconde os icones decorativos do toggle ao lado
+        cb.closest('label')?.querySelectorAll('.regex-toggle-on, .regex-toggle-off')
+            .forEach(s => s.setAttribute('aria-hidden', 'true'));
+    }
+}
+
 function aplicar() {
     document.querySelectorAll(CONTAINERS).forEach(c => {
         c.querySelectorAll(ROW).forEach(enriquecerLinha);
     });
     enriquecerEditor();
+    enriquecerTogglesPainel();
 }
 
 function iniciar() {
