@@ -296,6 +296,7 @@ import './collapsibles.js';
 import './menus.js';
 import './pins.js';
 import './namefixes.js';
+import './keyboardfix.js';
 // Last: fills in the title (as aria-label) for everything the modules above
 // did not name explicitly -- so the specific labels take priority.
 import './titles.js';
