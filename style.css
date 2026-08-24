@@ -97,6 +97,29 @@
     border-radius: 3px;
 }
 
+/* Pinos de painel: o checkbox e display:none no core (so operavel com mouse),
+   e a nossa pins.js tira os icones decorativos da tabulacao -- entao sem isto o
+   pino fica inalcancavel. Aqui tornamos o checkbox visualmente escondido mas
+   FOCAVEL (o icone visual continua sendo o label, acionado pelo :checked). */
+[id$="_pin_div"] input[type="checkbox"] {
+    display: inline-block !important;
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+}
+/* Foco visivel no pino: destaca o icone (cadeado) quando o checkbox tem foco. */
+[id$="_pin_div"]:has(input[type="checkbox"]:focus-visible) label {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
 /* Regex: os interruptores (ligar/desligar de cada script e permitir preset/
    scoped) sao checkboxes com display:none no CSS do regex -- so operaveis com
    mouse. Aqui os tornamos VISUALMENTE escondidos mas FOCAVEIS (alcancaveis por

@@ -97,6 +97,11 @@ function aplicar() {
         x.setAttribute('aria-label', nome ? 'Remove tag: ' + nome : 'Remove tag');
     });
 
+    // --- documentation help links (the "?" next to many section titles)
+    document.querySelectorAll('a.notes-link').forEach(a => {
+        if (!a.hasAttribute('aria-label')) a.setAttribute('aria-label', 'Open documentation');
+    });
+
     // --- tag filter/manage buttons (icons with no text)
     const tagBotoes = { filterByFavorites: 'Filter by favorites', manageTags: 'Manage tags' };
     for (const [cls, nome] of Object.entries(tagBotoes)) {

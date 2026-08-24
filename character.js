@@ -64,9 +64,18 @@ const CAMPOS_PERSONAGEM = {
     'mes_example_textarea': 'Example Messages',
     'creator_notes_textarea': "Creator's Notes",
     'depth_prompt_prompt': "Character's Note (depth prompt)",
+    'depth_prompt_depth': "Character's Note depth",
+    'depth_prompt_role': "Character's Note role",
     'talkativeness_slider': 'Talkativeness',
     'character_sort_order': 'Characters sorting order',
     'character_search_bar': 'Search characters',
+    'char-management-dropdown': 'Character actions',
+    // Advanced Definitions (live in #character_popup, outside #right-nav-panel)
+    'system_prompt_textarea': 'Main Prompt override',
+    'post_history_instructions_textarea': 'Post-History Instructions',
+    'creator_textarea': 'Creator name or contact',
+    'character_version_textarea': 'Character Version',
+    'tags_textarea': 'Embedded tags, comma separated',
     // group form fields
     'rm_group_chat_name': 'Group name',
     'groupTagInput': 'Search or create tags',
@@ -146,9 +155,11 @@ function enriquecerBotoesIcone(raiz) {
     }
 }
 
-function enriquecerCampos(raiz) {
+function enriquecerCampos() {
+    // getElementById (not scoped to the panel) so we also reach the Advanced
+    // Definitions fields, which live in #character_popup outside #right-nav-panel.
     for (const [id, rotulo] of Object.entries(CAMPOS_PERSONAGEM)) {
-        const el = raiz.querySelector('#' + id);
+        const el = document.getElementById(id);
         if (el && !el.hasAttribute('aria-label')) {
             el.setAttribute('aria-label', rotulo);
         }
