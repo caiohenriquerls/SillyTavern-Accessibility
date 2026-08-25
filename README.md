@@ -17,6 +17,7 @@ Built by and for a blind SillyTavern user.
 - **Send bar & messages** — the options menu button, the message input, the swipe (previous/next response) arrows, and the "wand" menu.
 - **Menus** (options / wand) — turned into proper focus‑managed pop‑ups: focus moves into the menu on open and back to the button on close, `aria-expanded` reflects state, Escape closes.
 - **Panel pins** — the lock/unlock pin of each drawer is named, and its decorative icon halves are removed from the tab order.
+- **select2 dropdowns** — SillyTavern hides the real `<select>` behind the select2 widget and marks it `aria-hidden` + `tabindex="-1"`, so a screen reader cannot reach it. This re‑exposes the native `<select>` (a control NVDA operates well) and hides the visual widget from the accessibility tree, giving a single, operable tab stop. This is what finally lets a screen‑reader user **activate a lorebook** in *Active World(s) for all chats* (and use the model pickers, provider lists, etc.). The mouse keeps using the visual widget unchanged.
 - **Collapsible sections** — every `inline-drawer` (each extension in the Extensions panel, plus settings/group sections) gets a named `button` with `aria-expanded`.
 - **Settings sliders** — the ~78 `slider + number` pairs get their visual label associated as an accessible name.
 - **`title` → `aria-label`** — the single biggest win: `title` is read by NVDA in focus mode (Tab) but **not** reliably in browse mode (arrow keys). This promotes `title` to `aria-label` on ~800 icon controls so they are announced in **every** reading mode.
@@ -45,7 +46,7 @@ SillyTavern/data/<user>/extensions/SillyTavern-Accessibility/
 
 ## Known limitations
 
-- select2 dropdowns (e.g. some multi‑selects) remain rougher than native controls; they are labeled but the widget itself is third‑party.
+- select2 dropdowns are made operable by re‑exposing the native `<select>`; free‑text tag inputs (if any appear) are left to the widget so typing new entries still works.
 - The FontAwesome icon → name fallback is heuristic for a small number of controls that have neither text nor a `title`.
 
 ## Contributing

@@ -160,6 +160,24 @@
     border-radius: 3px;
 }
 
+/* select2: o <select> nativo fica escondido pelo select2 (classe
+   select2-hidden-accessible) e o ST ainda o marca aria-hidden + tabindex=-1,
+   deixando-o inalcancavel pelo leitor de tela. A select2a11y.js reexpoe o
+   nativo (tabindex 0, sem aria-hidden) e esconde o widget visual da arvore de
+   acessibilidade. Como o nativo tem tamanho 1px (select2 o encolhe), damos a
+   ele um foco visivel util para quem enxerga e navega pelo teclado: uma faixa
+   sobre o widget select2 irmao quando o nativo tem foco. */
+select.select2-hidden-accessible:focus-visible {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+select.select2-hidden-accessible:focus-visible + .select2-container {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
 /* Painel de personas: botoes, campos e cards. */
 #PersonaManagement [role="button"]:focus-visible,
 #PersonaManagement .menu_button:focus-visible,
