@@ -5,20 +5,22 @@
  * lorebooks, character/group world info, model pickers, etc.). select2 hides the
  * real <select> with class "select2-hidden-accessible" AND SillyTavern marks it
  * aria-hidden="true" + tabindex="-1" -- so the screen reader/keyboard cannot
- * reach it. The visual select2 widget in its place has poor screen-reader
- * support (and its inner chips + search field create multiple tab stops).
+ * reach it.
  *
- * The most reliable fix is to expose the NATIVE <select>, which NVDA operates
- * well (a real listbox/combobox: arrows to move, Space to toggle), and hide the
- * visual select2 widget from the accessibility tree + tab order. The mouse still
- * uses the visual widget exactly as before (aria-hidden/tabindex do not affect
- * the mouse). This is what finally lets a screen-reader user ACTIVATE a lorebook
- * in "Active World(s) for all chats".
+ * SINGLE selects: expose the native <select> (a clean combobox NVDA operates
+ * well) and hide the visual select2 widget from the accessibility tree.
  *
- * For MULTISELECTS we also expose each selected item's "x" remove button as a
- * real, named button ("Deactivate <name>"), so a screen-reader/keyboard user can
- * turn an item off with one Enter press -- the native multiselect alone would
- * force the clunky Ctrl+Space to deselect.
+ * MULTISELECTS (e.g. "Active World(s) for all chats"): the select2 widget packs
+ * TWO jobs into one combobox -- the type-to-search input that ADDS an item, and
+ * the "chips" of already-selected items, each with an "x" that REMOVES it. We:
+ *   - keep the select2 combobox usable to ACTIVATE (it has a searchable dropdown,
+ *     which the native multiselect does not);
+ *   - do NOT expose the internal "x" buttons -- inside the combobox they read as
+ *     controls "inside a text box";
+ *   - instead build a SEPARATE list of real "Deactivate <name>" buttons next to
+ *     the widget, so turning an item off is one Enter press, no Ctrl+Space.
+ * The native <select> stays hidden for multiselects (the select2 combobox is the
+ * activate control). The mouse keeps using the visual widget unchanged.
  */
 
 const NATIVE = 'select.select2-hidden-accessible';
@@ -27,69 +29,17 @@ function detab(el) {
     if (el) el.setAttribute('tabindex', '-1');
 }
 
-/** The visible name of a select2 chip (a selected item). */
-function nomeDoChip(chip) {
-    return (chip.getAttribute('title')
-        || chip.querySelector('.select2-selection__choice__display')?.textContent
-        || '').trim();
-}
-
-/**
- * A multiselect select2 shows each selected item as a "chip" with an "x" remove
- * button. Those buttons are how you DEACTIVATE an item (e.g. turn a lorebook
- * off in "Active World(s)"), but they were unreachable. Here we keep the
- * container in the accessibility tree, silence the noisy/duplicate parts (the
- * type-to-search field, the chip name spans, the clear-all button), and expose
- * ONLY the remove buttons as real, named buttons. The native <select> stays the
- * way to add/read; these buttons are the one-press way to remove.
- */
-function exporBotoesRemover(container, native) {
-    container.removeAttribute('aria-hidden');
-    // The selection box is an ANCESTOR of the chips: never aria-hide it (that
-    // would hide the chips + their remove buttons too). select2 marks it
-    // role="combobox", which makes the screen reader announce the whole widget
-    // -- our remove buttons included -- as an editable TEXT BOX. Strip that role
-    // (and its combobox aria) so it is a plain container and the buttons inside
-    // are announced as buttons. The native <select> is the real combobox.
-    container.querySelectorAll('.select2-selection').forEach(sel => {
-        detab(sel);
-        sel.removeAttribute('role');
-        sel.removeAttribute('aria-label');
-        sel.removeAttribute('aria-expanded');
-        sel.removeAttribute('aria-activedescendant');
-    });
-    // Leaf noise -> out of the tab order and hidden from the screen reader.
-    container.querySelectorAll('.select2-search__field, .select2-selection__choice__display, .select2-selection__clear')
-        .forEach(el => { detab(el); el.setAttribute('aria-hidden', 'true'); });
-    // "world" selects deactivate; other multiselects just remove.
-    const verbo = /world/i.test(native.id) ? 'Deactivate ' : 'Remove ';
-    container.querySelectorAll('.select2-selection__choice').forEach(chip => {
-        const btn = chip.querySelector('.select2-selection__choice__remove');
-        if (!btn) return;
-        btn.removeAttribute('aria-hidden');
-        btn.setAttribute('tabindex', '0');
-        btn.setAttribute('aria-label', verbo + nomeDoChip(chip));
-    });
-}
-
-/** A single select has no chips: hide the whole widget from AT + tab order. */
-function esconderWidget(container) {
-    container.setAttribute('aria-hidden', 'true');
-    // Remove every focusable descendant from the tab order so it is not an
-    // aria-hidden-with-focusable error and does not create extra tab stops.
-    container.querySelectorAll('input, textarea, button, a, select, [tabindex]').forEach(detab);
-}
-
-function tratarWidget(container, native) {
-    if (!container) return;
-    if (native.multiple) exporBotoesRemover(container, native);
-    else esconderWidget(container);
+/** The select2 container is the sibling right after the <select>. */
+function widgetDe(native) {
+    let c = native.nextElementSibling;
+    if (c && c.classList.contains('select2-container')) return c;
+    return native.parentElement?.querySelector(':scope > .select2-container') || null;
 }
 
 /**
  * A select2 configured with tags:true lets the user type NEW entries that are
  * not in the option list. For those the search field is the only way in, so we
- * must not detab it -- we skip the whole control and leave it to select2.
+ * must not touch it -- we skip the whole control and leave it to select2.
  */
 function permiteTextoLivre(native) {
     try {
@@ -101,19 +51,107 @@ function permiteTextoLivre(native) {
     }
 }
 
-function expor(native) {
-    if (permiteTextoLivre(native)) return;
-    // Native select -> reachable and in the accessibility tree.
+/* ------------------------------------------------------------------ */
+/* single select                                                       */
+/* ------------------------------------------------------------------ */
+
+function exporNativo(native, container) {
     if (native.getAttribute('aria-hidden') === 'true') native.removeAttribute('aria-hidden');
     if (native.getAttribute('tabindex') === '-1' || !native.hasAttribute('tabindex')) {
         native.setAttribute('tabindex', '0');
     }
-    // The select2 widget is the sibling right after the <select>.
-    let container = native.nextElementSibling;
-    if (!(container && container.classList.contains('select2-container'))) {
-        container = native.parentElement && native.parentElement.querySelector(':scope > .select2-container');
+    if (!container) return;
+    // hide the visual widget from AT + tab order
+    container.setAttribute('aria-hidden', 'true');
+    container.querySelectorAll('input, textarea, button, a, select, [tabindex]').forEach(detab);
+}
+
+/* ------------------------------------------------------------------ */
+/* multiselect                                                         */
+/* ------------------------------------------------------------------ */
+
+/** Keep the native <select> out of the way -- the select2 combobox is used. */
+function esconderNativo(native) {
+    if (native.getAttribute('aria-hidden') !== 'true') native.setAttribute('aria-hidden', 'true');
+    if (native.getAttribute('tabindex') !== '-1') native.setAttribute('tabindex', '-1');
+}
+
+/**
+ * Build/refresh the separate list of "Deactivate <name>" buttons for a
+ * multiselect. The buttons are screen-reader-only (no visual change); clicking
+ * one deselects that option and lets select2 + SillyTavern react.
+ */
+function construirBotoesRemover(container, native) {
+    const verbo = /world/i.test(native.id) ? 'Deactivate ' : 'Remove ';
+    // our own container, right after the select2 widget
+    let box = container.nextElementSibling;
+    if (!(box && box.classList.contains('pma11y-deactivate'))) {
+        box = document.createElement('span');
+        box.className = 'pma11y-deactivate';
+        box.setAttribute('role', 'group');
+        container.after(box);
     }
-    tratarWidget(container, native);
+    box.setAttribute('aria-label', (native.getAttribute('aria-label') || 'Selected items') + ' -- remove');
+
+    const selected = [...native.selectedOptions];
+    const sig = selected.map(o => o.value).join('');
+    if (box.dataset.sig === sig) return;   // unchanged -> keep focus, do nothing
+    const querFoco = box.dataset.pendFoco;
+    box.dataset.pendFoco = '';
+
+    box.textContent = '';
+    selected.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pma11y-sr-only';
+        btn.textContent = '✕';
+        btn.setAttribute('aria-label', verbo + opt.textContent.trim());
+        btn.addEventListener('click', () => {
+            // remember we want focus back here after the list rebuilds
+            box.dataset.pendFoco = '1';
+            opt.selected = false;
+            native.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        box.appendChild(btn);
+    });
+    box.dataset.sig = sig;
+
+    // after a deactivation, move focus to the next remaining button, or to the
+    // add control, so a screen-reader user is not dumped on <body>.
+    if (querFoco) {
+        const alvo = box.querySelector('button')
+            || container.querySelector('.select2-search__field');
+        if (alvo) window.setTimeout(() => alvo.focus(), 0);
+    }
+}
+
+function tratarMultiselect(container, native) {
+    esconderNativo(native);
+    container.removeAttribute('aria-hidden');
+    // Keep the select2 combobox operable to ADD. Its internal "x" buttons and
+    // clear-all are hidden from AT (we expose external ones instead) so they do
+    // not read as controls "inside a text box"; the chip labels stay as the
+    // combobox value, and the search field stays as the add input.
+    container.querySelectorAll('.select2-selection__choice__remove, .select2-selection__clear')
+        .forEach(el => { detab(el); el.setAttribute('aria-hidden', 'true'); });
+    // the clickable chip label is a mouse-only "open for edit" shortcut: keep it
+    // readable but out of the tab order.
+    container.querySelectorAll('.select2-selection__choice__display').forEach(detab);
+    // make sure the search field (the add input) is reachable
+    const busca = container.querySelector('.select2-search__field');
+    if (busca) busca.removeAttribute('aria-hidden');
+    construirBotoesRemover(container, native);
+}
+
+/* ------------------------------------------------------------------ */
+/* driver                                                              */
+/* ------------------------------------------------------------------ */
+
+function expor(native) {
+    if (permiteTextoLivre(native)) return;
+    const container = widgetDe(native);
+    if (native.multiple) tratarMultiselect(container, native);
+    else exporNativo(native, container);
 }
 
 function aplicar() {
@@ -123,7 +161,7 @@ function aplicar() {
 function iniciar() {
     aplicar();
     // select2 re-renders its widget when chips/options change; a light observer
-    // keeps the widget hidden and the native exposed.
+    // re-applies (rebuilding the deactivate buttons when the selection changes).
     new MutationObserver(() => {
         window.clearTimeout(iniciar._t);
         iniciar._t = window.setTimeout(aplicar, 150);
