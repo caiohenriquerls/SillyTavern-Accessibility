@@ -177,6 +177,12 @@ select.select2-hidden-accessible:focus-visible + .select2-container {
     outline-offset: 2px;
     border-radius: 3px;
 }
+/* Botao "x" de cada item selecionado (desativar/remover), agora focavel. */
+.select2-selection__choice__remove:focus-visible {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
 
 /* Painel de personas: botoes, campos e cards. */
 #PersonaManagement [role="button"]:focus-visible,

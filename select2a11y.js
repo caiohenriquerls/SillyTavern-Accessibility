@@ -14,18 +14,66 @@
  * uses the visual widget exactly as before (aria-hidden/tabindex do not affect
  * the mouse). This is what finally lets a screen-reader user ACTIVATE a lorebook
  * in "Active World(s) for all chats".
+ *
+ * For MULTISELECTS we also expose each selected item's "x" remove button as a
+ * real, named button ("Deactivate <name>"), so a screen-reader/keyboard user can
+ * turn an item off with one Enter press -- the native multiselect alone would
+ * force the clunky Ctrl+Space to deselect.
  */
 
 const NATIVE = 'select.select2-hidden-accessible';
 
+function detab(el) {
+    if (el) el.setAttribute('tabindex', '-1');
+}
+
+/** The visible name of a select2 chip (a selected item). */
+function nomeDoChip(chip) {
+    return (chip.getAttribute('title')
+        || chip.querySelector('.select2-selection__choice__display')?.textContent
+        || '').trim();
+}
+
+/**
+ * A multiselect select2 shows each selected item as a "chip" with an "x" remove
+ * button. Those buttons are how you DEACTIVATE an item (e.g. turn a lorebook
+ * off in "Active World(s)"), but they were unreachable. Here we keep the
+ * container in the accessibility tree, silence the noisy/duplicate parts (the
+ * type-to-search field, the chip name spans, the clear-all button), and expose
+ * ONLY the remove buttons as real, named buttons. The native <select> stays the
+ * way to add/read; these buttons are the one-press way to remove.
+ */
+function exporBotoesRemover(container, native) {
+    container.removeAttribute('aria-hidden');
+    // The selection box is an ANCESTOR of the chips: only detab it, never
+    // aria-hide it (that would hide the chips + their remove buttons too).
+    container.querySelectorAll('.select2-selection').forEach(detab);
+    // Leaf noise -> out of the tab order and hidden from the screen reader.
+    container.querySelectorAll('.select2-search__field, .select2-selection__choice__display, .select2-selection__clear')
+        .forEach(el => { detab(el); el.setAttribute('aria-hidden', 'true'); });
+    // "world" selects deactivate; other multiselects just remove.
+    const verbo = /world/i.test(native.id) ? 'Deactivate ' : 'Remove ';
+    container.querySelectorAll('.select2-selection__choice').forEach(chip => {
+        const btn = chip.querySelector('.select2-selection__choice__remove');
+        if (!btn) return;
+        btn.removeAttribute('aria-hidden');
+        btn.setAttribute('tabindex', '0');
+        btn.setAttribute('aria-label', verbo + nomeDoChip(chip));
+    });
+}
+
+/** A single select has no chips: hide the whole widget from AT + tab order. */
 function esconderWidget(container) {
-    if (!container) return;
     container.setAttribute('aria-hidden', 'true');
     // Remove every focusable descendant from the tab order so it is not an
     // aria-hidden-with-focusable error and does not create extra tab stops.
-    container.querySelectorAll('input, textarea, button, a, select, [tabindex]').forEach(el => {
-        el.setAttribute('tabindex', '-1');
-    });
+    container.querySelectorAll('input, textarea, button, a, select, [tabindex]').forEach(detab);
+}
+
+function tratarWidget(container, native) {
+    if (!container) return;
+    if (native.multiple) exporBotoesRemover(container, native);
+    else esconderWidget(container);
 }
 
 /**
@@ -55,7 +103,7 @@ function expor(native) {
     if (!(container && container.classList.contains('select2-container'))) {
         container = native.parentElement && native.parentElement.querySelector(':scope > .select2-container');
     }
-    esconderWidget(container);
+    tratarWidget(container, native);
 }
 
 function aplicar() {
