@@ -45,9 +45,19 @@ function nomeDoChip(chip) {
  */
 function exporBotoesRemover(container, native) {
     container.removeAttribute('aria-hidden');
-    // The selection box is an ANCESTOR of the chips: only detab it, never
-    // aria-hide it (that would hide the chips + their remove buttons too).
-    container.querySelectorAll('.select2-selection').forEach(detab);
+    // The selection box is an ANCESTOR of the chips: never aria-hide it (that
+    // would hide the chips + their remove buttons too). select2 marks it
+    // role="combobox", which makes the screen reader announce the whole widget
+    // -- our remove buttons included -- as an editable TEXT BOX. Strip that role
+    // (and its combobox aria) so it is a plain container and the buttons inside
+    // are announced as buttons. The native <select> is the real combobox.
+    container.querySelectorAll('.select2-selection').forEach(sel => {
+        detab(sel);
+        sel.removeAttribute('role');
+        sel.removeAttribute('aria-label');
+        sel.removeAttribute('aria-expanded');
+        sel.removeAttribute('aria-activedescendant');
+    });
     // Leaf noise -> out of the tab order and hidden from the screen reader.
     container.querySelectorAll('.select2-search__field, .select2-selection__choice__display, .select2-selection__clear')
         .forEach(el => { detab(el); el.setAttribute('aria-hidden', 'true'); });
