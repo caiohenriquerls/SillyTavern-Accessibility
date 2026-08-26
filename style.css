@@ -148,9 +148,22 @@
     border-radius: 3px;
 }
 
-/* Interruptor ligar/desligar do script agora e o proprio <label> (role=checkbox,
-   marcado = habilitado); o foco vai nele. Destacamos o label inteiro. */
-.regex-script-label label[role="checkbox"]:focus-visible {
+/* Regex: checkbox de "habilitar" que injetamos (marcado = habilitado). Fica
+   sr-only (sem mudanca visual; o mouse usa o toggle visivel normal), mas
+   FOCAVEL. Ao receber foco, destacamos o icone visivel do toggle irmao. */
+.regex-script-label input.pma11y-enable {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+}
+.regex-script-label input.pma11y-enable:focus-visible ~ .regex-toggle-on,
+.regex-script-label input.pma11y-enable:focus-visible ~ .regex-toggle-off {
     outline: 3px solid #ffd166;
     outline-offset: 2px;
     border-radius: 3px;

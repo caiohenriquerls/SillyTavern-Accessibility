@@ -55,33 +55,30 @@ function enriquecerLinha(row) {
     row.setAttribute('aria-label', 'Regex script: ' + nome);
 
     // Enable/disable toggle. The native checkbox is `disable_regex`, whose
-    // CHECKED means DISABLED (inverted) -- and its label used to bake the word
-    // "Disable" into the name, so the reader said "Disable script X, checked",
-    // which fights itself. We keep it a checkbox, but with the honest mapping the
-    // user expects: the NAME is just the script name and CHECKED means ENABLED.
-    // Since a native checkbox cannot have its state inverted, we present the
-    // wrapping <label> as the checkbox (aria-checked = enabled), hide the native
-    // input from the screen reader, and drive it from the label.
+    // CHECKED means DISABLED (inverted), and its <label for> is broken -- so it
+    // both reads confusingly and is awkward to drive. We hide it from the screen
+    // reader and expose OUR OWN real <input type=checkbox> whose CHECKED means
+    // ENABLED, named just with the script name. A real checkbox is toggled
+    // natively by NVDA/keyboard; on change we mirror the new state onto the
+    // native control (SillyTavern reacts and redraws the list).
     const toggle = row.querySelector('.disable_regex');
-    const toggleLabel = toggle && toggle.closest('label');
-    if (toggle && toggleLabel) {
+    if (toggle) {
         toggle.setAttribute('aria-hidden', 'true');
         toggle.setAttribute('tabindex', '-1');
-        toggleLabel.setAttribute('role', 'checkbox');
-        toggleLabel.setAttribute('aria-checked', toggle.checked ? 'false' : 'true');
-        toggleLabel.setAttribute('aria-label', nome);
-        if (!toggleLabel.hasAttribute('tabindex')) toggleLabel.setAttribute('tabindex', '0');
-        if (!toggleLabel.dataset.a11yToggle) {
-            toggleLabel.dataset.a11yToggle = '1';
-            toggleLabel.addEventListener('keydown', ev => {
-                if (ev.key !== ' ' && ev.key !== 'Enter' && ev.key !== 'Spacebar') return;
-                ev.preventDefault();
-                pendenteFoco = nomeDoScript(ev.currentTarget.closest(ROW));
-                toggle.click();
+        let proxy = row.querySelector('input.pma11y-enable');
+        if (!proxy) {
+            proxy = document.createElement('input');
+            proxy.type = 'checkbox';
+            proxy.className = 'pma11y-enable';
+            toggle.insertAdjacentElement('afterend', proxy);
+            proxy.addEventListener('change', () => {
+                pendenteFoco = nomeDoScript(proxy.closest(ROW));
+                // the native "disable" checkbox must be the OPPOSITE of enabled
+                if (toggle.checked !== !proxy.checked) toggle.click();
             });
         }
-    } else if (toggle) {
-        toggle.setAttribute('aria-label', nome);
+        proxy.setAttribute('aria-label', nome);
+        proxy.checked = !toggle.checked;   // checked = enabled
     }
 
     // Checkbox de selecao em massa.
@@ -146,9 +143,9 @@ function aplicar() {
     if (pendenteFoco) {
         const alvo = [...document.querySelectorAll(ROW)]
             .find(r => nomeDoScript(r) === pendenteFoco);
-        const lbl = alvo && alvo.querySelector('label[role="checkbox"]');
+        const cb = alvo && alvo.querySelector('input.pma11y-enable');
         pendenteFoco = null;
-        if (lbl) window.setTimeout(() => lbl.focus(), 0);
+        if (cb) window.setTimeout(() => cb.focus(), 0);
     }
 }
 
