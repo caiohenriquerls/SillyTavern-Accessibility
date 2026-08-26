@@ -19,6 +19,9 @@
 const CONTAINERS = '#saved_regex_scripts, #saved_preset_scripts, #saved_scoped_scripts';
 const ROW = '.regex-script-label';
 
+/** After a toggle the whole list is redrawn; remember which script to refocus. */
+let pendenteFoco = null;
+
 /** Row action buttons: selector -> spoken purpose (the script name is appended). */
 const ACOES = [
     ['.edit_existing_regex', 'Edit script'],
@@ -51,11 +54,35 @@ function enriquecerLinha(row) {
     if (!row.hasAttribute('role')) row.setAttribute('role', 'group');
     row.setAttribute('aria-label', 'Regex script: ' + nome);
 
-    // Interruptor ligar/desligar. O checkbox e display:none no CSS do regex; o
-    // style.css desta extensao o torna focavel (visualmente escondido). Marcado
-    // = desativado.
+    // Enable/disable toggle. The native checkbox is `disable_regex`, whose
+    // CHECKED means DISABLED (inverted) -- and its label used to bake the word
+    // "Disable" into the name, so the reader said "Disable script X, checked",
+    // which fights itself. We keep it a checkbox, but with the honest mapping the
+    // user expects: the NAME is just the script name and CHECKED means ENABLED.
+    // Since a native checkbox cannot have its state inverted, we present the
+    // wrapping <label> as the checkbox (aria-checked = enabled), hide the native
+    // input from the screen reader, and drive it from the label.
     const toggle = row.querySelector('.disable_regex');
-    if (toggle) toggle.setAttribute('aria-label', 'Disable script: ' + nome);
+    const toggleLabel = toggle && toggle.closest('label');
+    if (toggle && toggleLabel) {
+        toggle.setAttribute('aria-hidden', 'true');
+        toggle.setAttribute('tabindex', '-1');
+        toggleLabel.setAttribute('role', 'checkbox');
+        toggleLabel.setAttribute('aria-checked', toggle.checked ? 'false' : 'true');
+        toggleLabel.setAttribute('aria-label', nome);
+        if (!toggleLabel.hasAttribute('tabindex')) toggleLabel.setAttribute('tabindex', '0');
+        if (!toggleLabel.dataset.a11yToggle) {
+            toggleLabel.dataset.a11yToggle = '1';
+            toggleLabel.addEventListener('keydown', ev => {
+                if (ev.key !== ' ' && ev.key !== 'Enter' && ev.key !== 'Spacebar') return;
+                ev.preventDefault();
+                pendenteFoco = nomeDoScript(ev.currentTarget.closest(ROW));
+                toggle.click();
+            });
+        }
+    } else if (toggle) {
+        toggle.setAttribute('aria-label', nome);
+    }
 
     // Checkbox de selecao em massa.
     const bulk = row.querySelector('.regex_bulk_checkbox');
@@ -113,6 +140,16 @@ function aplicar() {
     });
     enriquecerEditor();
     enriquecerTogglesPainel();
+
+    // The toggle redraws the whole list, destroying the focused control; put
+    // focus back on the same script's toggle.
+    if (pendenteFoco) {
+        const alvo = [...document.querySelectorAll(ROW)]
+            .find(r => nomeDoScript(r) === pendenteFoco);
+        const lbl = alvo && alvo.querySelector('label[role="checkbox"]');
+        pendenteFoco = null;
+        if (lbl) window.setTimeout(() => lbl.focus(), 0);
+    }
 }
 
 function iniciar() {

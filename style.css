@@ -148,6 +148,14 @@
     border-radius: 3px;
 }
 
+/* Interruptor ligar/desligar do script agora e o proprio <label> (role=checkbox,
+   marcado = habilitado); o foco vai nele. Destacamos o label inteiro. */
+.regex-script-label label[role="checkbox"]:focus-visible {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
 /* Tela de Regex: linhas de script, seus controles e o editor. */
 .regex-script-label [role="button"]:focus-visible,
 .regex-script-label .menu_button:focus-visible,
